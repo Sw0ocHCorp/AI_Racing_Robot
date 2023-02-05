@@ -1,0 +1,15 @@
+PROJET_AI_ROBOT_RACING_V0: 
+.Fonctionnalités présentes
+-> Création de l'Environnement(PyGame):
+    * Possibilité de tracer le circuit sur lequel l'Agent doit Apprendre à atteindre la ligne d'arrivé le plus rapidement
+-> Création de l'Agent:
+    * L'Agent peut prendre 3 Actions: Rotation Gauche(45°), Rotation Droite(45°), Avancer
+
+
+.Fonctionnalités à Développer
+-> Définir la méthode de Représentation des états de l'Environnement pertinent à la fois pour l'Apprentissage sur Soft et Utilisation sur Raspberry Pi(Robot IRL)
+    * Définir les données à utiliser pour Identifier un état de l'Environnement
+-> Définir la Méthode d'Apprentissage de l'Agent(Reinforcement Learning, Genetic Algorithm)
+-> Intégrer la Fenêtre PyGame dans une Interface Graphique(GTK car Raspberry Pi)
+
+-----------------------------------------------------------------------------------
