@@ -1,34 +1,43 @@
-def bresenham_v2(x1, y1, x2, y2):
-    # Détermination de la direction de la ligne
-    steep = abs(y2 - y1) > abs(x2 - x1)
-    if steep:
-        x1, y1 = y1, x1
-        x2, y2 = y2, x2
+import pygame
+import math
 
-    # S'assurer que la ligne se dessine de gauche à droite
-    if x1 > x2:
-        x1, x2 = x2, x1
-        y1, y2 = y2, y1
+# Initialisez Pygame
+pygame.init()
+clock= pygame.time.Clock()
 
-    # Initialisation
-    dx = x2 - x1
-    dy = abs(y2 - y1)
-    error = dx / 2
-    ystep = -1 if y1 > y2 else 1
-    y = y1
+# Définissez la taille de la fenêtre
+screen = pygame.display.set_mode((400, 300))
 
-    # Boucle principale
-    for x in range(x1, x2 + 1):
-        if steep:
-            print(y, x)  # Affiche les coordonnées des pixels
-        else:
-            print(x, y)
-        error -= dy
-        if error < 0:
-            y += ystep
-            error += dx
+# Créez un objet Rect
+rect = pygame.Rect(100, 100, 50, 50)
 
-bresenham_v2(0, 0, 5, 3)
-bresenham_v2(5, 3, 0, 0)
-bresenham_v2(5, 0, 0, 3)
-bresenham_v2(0, 3, 5, 0)
+# Boucle de jeu
+running = True
+while running:
+    clock.tick(5)
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            running = False
+
+    # Créez une image temporaire pour le Rect
+    rect_image = pygame.Surface((rect.width, rect.height))
+    rect_image.fill((255, 0, 0))
+
+    # Effectuez la rotation
+    rotated_image = pygame.transform.rotate(rect_image, 45)
+
+    # Calculez la position de l'image tournée
+    rot_rect = rotated_image.get_rect()
+    rot_rect.center = rect.center
+
+    # Effacez la fenêtre
+    screen.fill((255, 255, 255))
+
+    # Dessinez l'image tournée sur la surface de jeu
+    screen.blit(rotated_image, rot_rect)
+
+    # Actualisez l'affichage
+    pygame.display.update()
+
+# Quittez Pygame
+pygame.quit()
