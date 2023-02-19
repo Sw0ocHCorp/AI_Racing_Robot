@@ -89,6 +89,7 @@ class Environnement:
         env.draw_walls(isLeft= False)
         pygame.display.update()
         i= 0
+        prev_dist= 1000
         while i < len(agent.strategy):
             self.clock.tick(60)
             WINDOW.fill((255,255,255))
@@ -98,24 +99,36 @@ class Environnement:
             env.draw_walls(isLeft= True)
             env.draw_walls(isLeft= False)
             pygame.display.update()
-            agent.select_action(agent.strategy[i])
+            action= agent.select_action(agent.strategy[i])
             isLeftCollision, isRightCollision= env.capture_wall_collision(agent)
             for event in pygame.event.get():
                 pass
             pygame.display.update()
             if (agent.hitbox.top > 900 or agent.hitbox.bottom > 900) or (agent.surf.top > 900 or agent.surf.bottom > 900):
-                fitness= -150
+                fitness= -500
                 break
-            elif isLeftCollision or isRightCollision:
-                fitness-= 10
+            if isLeftCollision or isRightCollision:
+                fitness-= 50
             elif agent.position[0] >= 400 and agent.position[0] <= 600 and agent.position[1] <= 24:
-                fitness+= 100
+                fitness+= 2000
                 break
-            elif fitness <= -150:
-                fitness= -150
+            if fitness <= -500:
                 break
             else:
-                fitness+= 1
+                    agent_dist= self.manhattan_distance(agent.hitbox.center, (500, 24))
+                    if prev_dist >= agent_dist:
+                        prev_dist= agent_dist
+                        fitness+= 50
+                        if action == 2:
+                            fitness+= 10
+                        else:
+                            fitness+= 5
+                    else:
+                        fitness-= 3
+                        if action == 2:
+                            fitness+= 10
+                        else:
+                            fitness+= 5
             i+= 1
         print("Score_Agent=", fitness)
         return fitness
@@ -126,7 +139,7 @@ if __name__ == "__main__":
     env= Environnement()
     ae_agents= np.array([Agent(velocity= 10, rotation_angle= 45, 
                                position= ((WIDTH/2) - (PLAYER_WIDTH / 2), HEIGHT - (PLAYER_HEIGHT/1.7)),
-                               skin= "Software_Game_Assets/car1.png") for i in range(5)], dtype= Agent)
+                               skin= "Software_Game_Assets/car1.png") for i in range(10)], dtype= Agent)
     ga= None
     main_agent= Agent(velocity= 10, rotation_angle= 45, position= ((WIDTH/2) - (PLAYER_WIDTH / 2), HEIGHT - (PLAYER_HEIGHT/1.7)))
     run= True
@@ -137,6 +150,8 @@ if __name__ == "__main__":
     pygame.display.update()
     best_strat= []
     fitness_score= 0
+    isPrinted= False
+    ga= None
     while run:
         env.clock.tick(3)
         if env.left_bound.shape[0] > 1:
@@ -144,10 +159,13 @@ if __name__ == "__main__":
         if env.right_bound.shape[0] > 2:
             env.draw_walls(isLeft= False)
             if env.left_bound.shape[0] > 2:
-                ga= GeneticAlgorithm(agents= ae_agents, evaluate= env.evaluate_agents)
-                best_strat, fitness_score= ga.start_optimization(max_nfe=50)
+                if ga is None:
+                    ga= GeneticAlgorithm(agents= ae_agents, evaluate= env.evaluate_agents)
+                    if ga.isFinished == False:
+                        best_strat, fitness_score= ga.start_optimization(max_nfe=200)
         if ga is not None:
-            if ga.isFinished:
+            if ga.isFinished and isPrinted == False:
+                isPrinted= True
                 print("Best_Strat=", best_strat)
                 print("Fitness_Score=", fitness_score)
         pygame.display.update()

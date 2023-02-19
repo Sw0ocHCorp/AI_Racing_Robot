@@ -33,3 +33,23 @@ PROJET_AI_ROBOT_RACING_V0.1:
 -> Intégrer un système d'évaluation parallèles des Agents(Utilisations de Threads, 1 par Agents) pour affichage de tous les Agents en même temps lors de l'exécution de la Stratégie 
 
 -----------------------------------------------------------------------------------
+
+PROJET_AI_ROBOT_RACING_V0.1: 
+.Fonctionnalités présentes
+-> Création de l'Environnement(PyGame):
+    * Possibilité de tracer le circuit sur lequel l'Agent doit Apprendre à atteindre la ligne d'arrivé le plus rapidement
+    * Utilisation du calcul de distance de Levenshtein pour détection des limite du circuit par l'Agent(Simulation du capteur ultrason HC-SR04 IRL)
+-> Création de l'Agent:
+    * L'Agent peut prendre 3 Actions: Rotation Gauche(45°), Rotation Droite(45°), Avancer
+    * Fix problème de HitBox de l'Agent lors de la Rotation
+    * Fix Problème de calcul de la ligne entre 2 points(quand très peu d'écart axe X et beaucoup d'écart axe Y)
+-> Création de l'Algorithme Génétique(Vérification de Fonctionnement à faire):
+    * Génotype= Stratégie de l'Agent => Liste de 100 chiffres entre 0 et 2(0= DROITE | 1= GAUCHE | 2= AVANCER)
+    + Vérification du Fonctionnement de l'Algorithme Génétique
+
+.Fonctionnalités à Développer
+-> Adapter les valeur de récompense pour faire converger la population de l'algorithme 
+-> Intégrer la Fenêtre PyGame dans une Interface Graphique(GTK car Raspberry Pi)
+-> Intégrer un système d'évaluation parallèles des Agents(Utilisations de Threads, 1 par Agents) pour affichage de tous les Agents en même temps lors de l'exécution de la Stratégie 
+
+-----------------------------------------------------------------------------------

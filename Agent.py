@@ -61,16 +61,16 @@ class Agent:
     def movement(self, isForward= True):
         radian_angle= math.radians(self.angle)
         position= list(self.position)
-        if isForward:
-            position[0] -= self.velocity * math.sin(radian_angle)
-            self.hitbox.x -= self.velocity * math.sin(radian_angle)
-            position[1] -= self.velocity * math.cos(radian_angle)
-            self.hitbox.y -= self.velocity * math.cos(radian_angle)
-        else:
+        #if isForward:
+        position[0] -= self.velocity * math.sin(radian_angle)
+        self.hitbox.x -= self.velocity * math.sin(radian_angle)
+        position[1] -= self.velocity * math.cos(radian_angle)
+        self.hitbox.y -= self.velocity * math.cos(radian_angle)
+        """else:
             position[0] += self.velocity * math.sin(radian_angle)
             self.hitbox.x += self.velocity * math.sin(radian_angle)
             position[1] += self.velocity * math.cos(radian_angle)
-            self.hitbox.y += self.velocity * math.cos(radian_angle)
+            self.hitbox.y += self.velocity * math.cos(radian_angle)"""
         self.position= tuple(position)
         self.surf.x, self.surf.y= self.hitbox.x, self.hitbox.y
 
@@ -84,6 +84,7 @@ class Agent:
                 self.movement(isForward= False)
             else:
                 self.movement(isForward= True)
+        return action
         
 
     def bresenham_algorithm(self, first_point, last_point):
@@ -95,7 +96,7 @@ class Agent:
         steep = last_point[1] - first_point[1] > 0 or last_point[0] - first_point[0] > 0
         isFlip= False
         # S'assurer que la ligne se dessine de gauche à droite
-        if first_point[0] > last_point[0]:
+        if first_point[0] > last_point[0] or first_point[1] > last_point[1]:
             fp_tuple= (last_point[0], last_point[1])
             lp_tuple= (first_point[0], first_point[1])
         # Initialisation
