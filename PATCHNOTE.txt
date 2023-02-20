@@ -45,11 +45,11 @@ PROJET_AI_ROBOT_RACING_V0.1:
     * Fix Problème de calcul de la ligne entre 2 points(quand très peu d'écart axe X et beaucoup d'écart axe Y)
 -> Création de l'Algorithme Génétique(Vérification de Fonctionnement à faire):
     * Génotype= Stratégie de l'Agent => Liste de 100 chiffres entre 0 et 2(0= DROITE | 1= GAUCHE | 2= AVANCER)
-    + Vérification du Fonctionnement de l'Algorithme Génétique
+    * Vérification du Fonctionnement de l'Algorithme Génétique
+    + Intégrer un système d'évaluation parallèles des Agents(Utilisations de Threads, 1 par Agents) pour affichage de tous les Agents en même temps lors de l'exécution de la Stratégie 
 
 .Fonctionnalités à Développer
 -> Adapter les valeur de récompense pour faire converger la population de l'algorithme 
 -> Intégrer la Fenêtre PyGame dans une Interface Graphique(GTK car Raspberry Pi)
--> Intégrer un système d'évaluation parallèles des Agents(Utilisations de Threads, 1 par Agents) pour affichage de tous les Agents en même temps lors de l'exécution de la Stratégie 
 
 -----------------------------------------------------------------------------------

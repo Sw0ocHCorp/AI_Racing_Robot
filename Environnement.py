@@ -6,7 +6,7 @@ import time
 import math
 
 from Agent import Agent
-from EvolutionaryAlgorithms import GeneticAlgorithm, DifferentialEvolution
+from EvolutionaryAlgorithms import GeneticAlgorithm, DifferentialEvolution, GARatingThread
 
 PURPLE= (137, 0, 255)
 PLAYER_CAR= pygame.image.load("Software_Game_Assets\Player_car_final.png")
@@ -79,14 +79,78 @@ class Environnement:
                 right_collision= agent.wall_collision(prev_wall, first_wall)
         return left_collision, right_collision
     
-    def evaluate_agents(self, agent):
+    def thread_evaluate_agents(self, agents):
+        fitness_array= np.zeros(len(agents))
+        WINDOW.fill((255,255,255))
+        WINDOW.blit(FINISH_LINE, (400, 0))
+        evaluation_array= np.array([GARatingThread(agent, self) for agent in agents], dtype= GARatingThread)
+        agents_actions= np.zeros(len(agents))
+        agents_left_collisions= np.array([False for a in range(len(agents))])
+        agents_right_collision= np.array([False for a in range(len(agents))])
+        for agent in agents:
+            WINDOW.blit(agent.skin, agent.hitbox)
+            WINDOW.blit(agent.hitbox_surface, agent.surf)
+        self.draw_walls(isLeft= True)
+        self.draw_walls(isLeft= False)
+        pygame.display.update()
+        i= 0
+        prev_dist= 1000
+        while i < len(agents[0].strategy):
+            self.clock.tick(10)
+            for a, eval in enumerate(evaluation_array):
+                if fitness_array[a] <= -500:
+                    continue
+                else:
+                    eval.run(i)
+            for j, eval in enumerate(evaluation_array):
+                agents_actions[j], agents_left_collisions[j], agents_right_collision[j]= eval.get_data()
+            WINDOW.fill((255,255,255))
+            WINDOW.blit(FINISH_LINE, (400, 0))
+            for agent in agents:
+                WINDOW.blit(agent.skin, agent.hitbox)
+                WINDOW.blit(agent.hitbox_surface, agent.surf)
+            self.draw_walls(isLeft= True)
+            self.draw_walls(isLeft= False)
+            pygame.display.update()
+            if np.max(fitness_array) <= -500:
+                break
+            for k, agent in enumerate(agents):
+                if (agent.hitbox.top > 900 or agent.hitbox.bottom > 900) or (agent.surf.top > 900 or agent.surf.bottom > 900):
+                    fitness_array[k]= -500
+                if agents_left_collisions[k] or agents_right_collision[k]:
+                    fitness_array[k]-= 50
+                elif agent.position[0] >= 400 and agent.position[0] <= 600 and agent.position[1] <= 24:
+                    fitness_array[k]+= 2000
+                if fitness_array[k] <= -500:
+                    fitness_array[k] = -500
+                else:
+                        agent_dist= self.manhattan_distance(agent.hitbox.center, (500, 24))
+                        if prev_dist >= agent_dist:
+                            prev_dist= agent_dist
+                            fitness_array[k]+= 50
+                            if agents_actions[k] == 2:
+                                fitness_array[k]+= 10
+                            else:
+                                fitness_array[k]+= 5
+                        else:
+                            fitness_array[k]-= 3
+                            if agents_actions[k] == 2:
+                                fitness_array[k]+= 10
+                            else:
+                                fitness_array[k]+= 5
+            for event in pygame.event.get():
+                pass
+            i+=1
+        return fitness_array
+
+    def evaluate_agent(self, agent):
         fitness= 0
         WINDOW.fill((255,255,255))
         WINDOW.blit(agent.skin, agent.hitbox)
         WINDOW.blit(agent.hitbox_surface, agent.surf)
         WINDOW.blit(FINISH_LINE, (400, 0))
-        env.draw_walls(isLeft= True)
-        env.draw_walls(isLeft= False)
+        self.draw_walls(isLeft= True)
+        self.draw_walls(isLeft= False)
         pygame.display.update()
         i= 0
         prev_dist= 1000
@@ -96,8 +160,8 @@ class Environnement:
             WINDOW.blit(agent.skin, agent.hitbox)
             WINDOW.blit(agent.hitbox_surface, agent.surf)
             WINDOW.blit(FINISH_LINE, (400, 0))
-            env.draw_walls(isLeft= True)
-            env.draw_walls(isLeft= False)
+            self.draw_walls(isLeft= True)
+            self.draw_walls(isLeft= False)
             pygame.display.update()
             action= agent.select_action(agent.strategy[i])
             isLeftCollision, isRightCollision= env.capture_wall_collision(agent)
@@ -160,7 +224,8 @@ if __name__ == "__main__":
             env.draw_walls(isLeft= False)
             if env.left_bound.shape[0] > 2:
                 if ga is None:
-                    ga= GeneticAlgorithm(agents= ae_agents, evaluate= env.evaluate_agents)
+                    #ga= GeneticAlgorithm(agents= ae_agents, evaluate= env.evaluate_agent)
+                    ga= GeneticAlgorithm(agents= ae_agents, evaluate= env.thread_evaluate_agents, isThreadEvaluation= True)
                     if ga.isFinished == False:
                         best_strat, fitness_score= ga.start_optimization(max_nfe=200)
         if ga is not None:

@@ -11,14 +11,18 @@ WIDTH= 800
 player_img= Image.open("Software_Game_Assets\Player_car_final.png")
 PLAYER_WIDTH, PLAYER_HEIGHT= player_img.size
 class GeneticAlgorithm():
-    def __init__(self, agents, evaluate):
+    def __init__(self, agents, evaluate, isThreadEvaluation= False):
         print("Generation #0")
         print("-----------------------------")
+        self.isThreadEvaluation= isThreadEvaluation
         self.agents= agents
         self.population = np.array([agent.strategy for agent in self.agents])
         self.l= self.population.shape[1]
         self.evaluate= evaluate
-        self.fitness = np.array([self.evaluate(agent) for agent in self.agents])
+        if self.isThreadEvaluation:
+            self.fitness= evaluate(self.agents)
+        else:
+            self.fitness = np.array([self.evaluate(agent) for agent in self.agents])
         self.isFinished= False
 
     def selection(self, t=2):
@@ -64,7 +68,10 @@ class GeneticAlgorithm():
         pop_size= len(parents_strategies)
         #Evaluer la nouvelle population(Offspring)
         offspring_agents= self.distribute_strategies(offspring_strategies)
-        fitness_offspring= np.array([self.evaluate(agent) for agent in offspring_agents])
+        if self.isThreadEvaluation:
+            fitness_offspring= self.evaluate(offspring_agents)
+        else:
+            fitness_offspring= np.array([self.evaluate(agent) for agent in offspring_agents])
         #Elitisme --> garder les K meilleurs individus de la Génération précédente
         best_index= np.argmax(self.fitness)
         if self.fitness[best_index] > 0:
@@ -151,54 +158,20 @@ class DifferentialEvolution:
 
 # --> Thread pour Evaluation Parallèle <-- #
 class GARatingThread(Thread):
-    def __init__(self, env, game):
+    def __init__(self, agent, game):
         Thread.__init__(self)
-        
-        self.fitness_array= np.array([])
-        self.env= env
+        self.agent= agent
         self.game= game
+        self.action= None
+        self.isLeftCollision= None
+        self.isRightCollision= None
     
     def attach_agents_strat(self, strategies):
         self.strategies= strategies
 
-    def run(self):
-        """fitness= np.zeros(self.strategies.shape[0])
-        for i in range(len(fitness)):
-            self.game.fill((255,255,255))
-            self.game.blit(agent.skin, agent.hitbox)
-            self.game.blit(agent.hitbox_surface, agent.surf)
-            self.game.blit(FINISH_LINE, (400, 0))
-            self.env.draw_walls(isLeft= True)
-            self.env.draw_walls(isLeft= False)
-            pygame.display.update()
-        i= 0
-        while i < len(agent.strategy):
-            self.clock.tick(60)
-            self.game.fill((255,255,255))
-            self.game.blit(agent.skin, agent.hitbox)
-            self.game.blit(agent.hitbox_surface, agent.surf)
-            self.game.blit(FINISH_LINE, (400, 0))
-            self.env.draw_walls(isLeft= True)
-            self.env.draw_walls(isLeft= False)
-            pygame.display.update()
-            agent.select_action(agent.strategy[i])
-            isLeftCollision, isRightCollision= self.env.capture_wall_collision(agent)
-            for event in pygame.event.get():
-                pass
-            pygame.display.update()
-            if (agent.hitbox.top > 900 or agent.hitbox.bottom > 900) or (agent.surf.top > 900 or agent.surf.bottom > 900):
-                fitness= -150
-                break
-            elif isLeftCollision or isRightCollision:
-                fitness-= 10
-            elif agent.position[0] >= 400 and agent.position[0] <= 600 and agent.position[1] <= 24:
-                fitness+= 100
-                break
-            elif fitness <= -150:
-                fitness= -150
-                break
-            else:
-                fitness+= 1
-            i+= 1
-        print("Score_Agent=", fitness)
-        return fitness"""
+    def run(self, i):
+        self.action= self.agent.select_action(self.agent.strategy[i])
+        self.isLeftCollision, self.isRightCollision= self.game.capture_wall_collision(self.agent)
+
+    def get_data(self):
+        return self.action, self.isLeftCollision, self.isRightCollision
