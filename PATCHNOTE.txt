@@ -34,7 +34,7 @@ PROJET_AI_ROBOT_RACING_V0.1:
 
 -----------------------------------------------------------------------------------
 
-PROJET_AI_ROBOT_RACING_V0.1: 
+PROJET_AI_ROBOT_RACING_V0.2: 
 .Fonctionnalités présentes
 -> Création de l'Environnement(PyGame):
     * Possibilité de tracer le circuit sur lequel l'Agent doit Apprendre à atteindre la ligne d'arrivé le plus rapidement
@@ -51,5 +51,27 @@ PROJET_AI_ROBOT_RACING_V0.1:
 .Fonctionnalités à Développer
 -> Adapter les valeur de récompense pour faire converger la population de l'algorithme 
 -> Intégrer la Fenêtre PyGame dans une Interface Graphique(GTK car Raspberry Pi)
+
+-----------------------------------------------------------------------------------
+
+PROJET_AI_ROBOT_RACING_V0.3: 
+.Fonctionnalités présentes
+-> Création de l'Environnement: ==> MIGRATION VERS PYTHON ARCADE
+    * Possibilité de tracer le circuit sur lequel l'Agent doit Apprendre à atteindre la ligne d'arrivé le plus rapidement
+    * Utilisation du calcul de distance de Levenshtein pour détection des collisions Circuit <--> Agent(Simulation du capteur ultrason HC-SR04 IRL)
+-> Création de l'Agent:
+    * L'Agent peut prendre 3 Actions: Rotation Gauche(45°), Rotation Droite(45°), Avancer
+    * Hitbox directement gérée par la librairie Arcade
+-> Création de l'Algorithme Génétique(Vérification de Fonctionnement à faire):
+    * Génotype= Stratégie de l'Agent => Liste de 100 chiffres entre 0 et 2(0= DROITE | 1= GAUCHE | 2= AVANCER)
+    * Vérification du Fonctionnement de l'Algorithme Génétique
+    * Evaluation "Simultanées" des Agents
+    + Test OK sur une Génération
+
+
+.Fonctionnalités à Développer
+-> Tester le Programme à plus grande échelle (sur plusieurs générations)
+-> Adapter les valeur de récompense pour faire converger la population de l'algorithme 
+-> Ajouter une GUI à l'application Python Arcade ou Intégrer l'Environnement dans une application GTK
 
 -----------------------------------------------------------------------------------
