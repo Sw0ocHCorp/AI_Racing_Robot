@@ -73,7 +73,7 @@ class GeneticAlgorithm():
     def replacement(self, k= 1):
         new_generation= np.empty((0, self.population.shape[1]))
         new_fitness= np.array([])
-        pop_size= self.population.shape[1]
+        pop_size= self.population.shape[0]
         #Elitisme --> garder les K meilleurs individus de la Génération précédente
         best_index= np.argmax(self.fitness)
         if self.fitness[best_index] > 0:

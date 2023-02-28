@@ -53,29 +53,31 @@ class Environnement(arcade.Window):
         self.ga= GeneticAlgorithm(self.ae_agents)
         self.evaluation_array= np.array([GARatingThread(agent, self) for agent in self.ae_agents], dtype= GARatingThread)
         self.main_agent= Agent(velocity= 10, rotation_angle= 45, position= ((WIDTH/2) - (PLAYER_WIDTH / 2), (PLAYER_HEIGHT/1.7)))
+        self.main_sprite= self.main_agent.sprite
         self.agent_actions= np.zeros(len(self.ae_agents))
         self.agent_fitness= np.zeros(len(self.ae_agents))
         self.offspring_fitness= np.zeros(len(self.ae_agents)*2)
-        """PLAYER_CAR.center_x= (WIDTH/2) - (PLAYER_WIDTH / 2)
-        PLAYER_CAR.center_y= PLAYER_HEIGHT/1.7
-        self.car_list.append(PLAYER_CAR)"""
+        #self.fitness= 0
         for agent in self.ae_agents:
             self.agents.append(agent.sprite)
-        #self.car_list.append(self.main_agent.sprite)
 
     def on_draw(self):
         self.clear()
         FINISH_LINE.draw()
+        #Décommenter pour test sur un seul Agent
+        """self.main_sprite.draw()
+        self.main_sprite.draw_hit_box(arcade.color.RED, 3)"""
+
+        #Commenter pour Fonctionnement normal
         if self.isFirstEval == False:
             self.agents.draw()
             self.agents.draw_hit_boxes(arcade.color.RED, 3)
         elif self.isEvaluated == False:
             self.offspring_agents.draw()
             self.offspring_agents.draw_hit_boxes(arcade.color.RED, 3)
+
         self.wall_list.draw()
-        if self.ok == True:
-            self.ok= False
-            self.cpt_draw+= 1
+        time.sleep(0.3)
     
     def on_mouse_press(self, x, y, button, modifiers):
         if button == arcade.MOUSE_BUTTON_LEFT:
@@ -96,13 +98,21 @@ class Environnement(arcade.Window):
                     wall.center_y= position[1]
                     self.wall_list.append(wall)
             self.prev_right_position= (x, y)
+        print("Left wall: ", self.num_lwall)
+        print("Right wall: ", self.num_rwall)
     
     def on_update(self, frame_rate= 1/1):
-        
         if self.num_lwall >= 4 and self.num_rwall >= 4:
             if self.ga.limit_nfe >= 0:
                 # --> Lancement du GA | Evaluation de la GEN#0
                 if self.isFirstEval == False:
+                    #Test evaluation d'un seul Agent
+                    """if self.action_strat < len(self.main_agent.strategy):
+                        self.fitness+= self.evaluate_agent(self.main_agent, self.action_strat)
+                    else:
+                        print("Fitness: ", self.fitness)
+                    self.action_strat+= 1"""
+                    #Fontionnement normal
                     if self.action_strat < len(self.agents_array[0].strategy):
                         if self.index_agent < len(self.agents):
                             self.agent_fitness[self.index_agent]+= self.evaluate_agent(self.ae_agents[self.index_agent], self.action_strat)
@@ -131,7 +141,6 @@ class Environnement(arcade.Window):
                         self.offspring_agents.append(agent.sprite)
                     self.off_agent_array= offspring_agents.copy()
                     self.isOffspringCreated= True
-                    self.ga.limit_nfe -= len(self.offspring_agents)
                 # --> Evaluation des Enfants
                 elif self.isEvaluated == False:
                     if self.action_strat < len(self.off_agent_array[0].strategy):
@@ -171,10 +180,9 @@ class Environnement(arcade.Window):
                     self.action_strat= 0
             else:
 
-                print("Fitness: ", self.agent_fitness)
+                print("Max Fitness: ", self.ga.fitness[np.argmax(self.ga.fitness)])
         self.agents.on_update(frame_rate)
         self.offspring_agents.on_update(frame_rate)
-
         
 
     #Fonction Developeur
