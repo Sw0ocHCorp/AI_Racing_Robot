@@ -1,3 +1,4 @@
+from pygame.sprite import *
 import random
 import numpy as np
 from PIL import Image
@@ -22,7 +23,7 @@ class GeneticAlgorithm():
         if self.isThreadEvaluation:
             self.fitness= evaluate(self.agents)
         else:
-            self.fitness = np.array([self.evaluate(agent) for agent in self.agents])
+            self.fitness = np.array(self.evaluate(self.agents))
         self.isFinished= False
 
     def selection(self, t=2):
@@ -67,7 +68,7 @@ class GeneticAlgorithm():
         new_fitness= np.array([])
         pop_size= len(parents_strategies)
         #Evaluer la nouvelle population(Offspring)
-        offspring_agents= self.distribute_strategies(offspring_strategies)
+        offspring_agents= [off_agent for off_agent in self.distribute_strategies(offspring_strategies)]
         if self.isThreadEvaluation:
             fitness_offspring= self.evaluate(offspring_agents)
         else:
@@ -85,7 +86,7 @@ class GeneticAlgorithm():
         new_generation= np.concatenate((new_generation, offspring_strategies[:pop_size-len(new_generation)]), axis= 0)
         new_fitness= np.concatenate((new_fitness, fitness_offspring[:pop_size-len(new_fitness)]), axis= None)
         self.population= np.array(new_generation)
-        self.agents= self.distribute_strategies(self.population)
+        self.agents= [new_agent for new_agent in self.distribute_strategies(self.population)]
         self.fitness= np.array(new_fitness)
         #Remplir le reste population avec les individus de la nouvelle population
 

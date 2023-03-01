@@ -4,13 +4,17 @@ import numpy as np
 from PIL import Image
 import time
 import math
-
+from pygame.sprite import *
 from Agent import Agent
 from EvolutionaryAlgorithms import GeneticAlgorithm, DifferentialEvolution, GARatingThread
 
 PURPLE= (137, 0, 255)
 PLAYER_CAR= pygame.image.load("Software_Game_Assets\Player_car_final.png")
-FINISH_LINE= pygame.image.load("Software_Game_Assets\Finish_line.png")
+STATIC_SPRITES= Group()
+FINISH_LINE= Sprite(STATIC_SPRITES)
+FINISH_LINE.image= pygame.image.load("Software_Game_Assets\Finish_line.png")
+FINISH_LINE.rect= FINISH_LINE.image.get_rect()
+FINISH_LINE.rect.topleft= (400, 0)
 player_img= Image.open("Software_Game_Assets\Player_car_final.png")
 PLAYER_WIDTH, PLAYER_HEIGHT= player_img.size
 HEIGHT= 900
@@ -21,211 +25,218 @@ WINDOW= pygame.display.set_mode((WIDTH, HEIGHT))
 
 
 class Environnement:
-    def __init__(self) -> None:
+    def __init__(self, agents_to_optimize):
         self.right_bound= np.empty((0,2))
         self.left_bound= np.empty((0,2))
         self.clock= pygame.time.Clock()
-    
-    def draw_walls(self, isLeft):
-        if isLeft:
-            for i in range(1, self.left_bound.shape[0]):
-                pygame.draw.line(WINDOW, PURPLE, tuple(self.left_bound[i-1,:]), tuple(self.left_bound[i,:]), 5)
-        else:
-            for i in range(1, self.right_bound.shape[0]):
-                pygame.draw.line(WINDOW, PURPLE, tuple(self.right_bound[i-1,:]), tuple(self.right_bound[i,:]), 5)
+        self.agents= Group()
+        self.num_lwall= 0
+        self.num_rwall= 0
+        self.prev_left_position= None
+        self.prev_right_position= None
+        self.best_dist= 1000
+        self.stop_eval= False
+        self.agents= Group()
+        for agent in agents_to_optimize:
+            self.agents.add(agent)
 
     def euclidian_distance(self, coord_o, coord_f):
         return math.sqrt(abs(coord_o[0]-coord_f[0]) + abs(coord_o[1]-coord_f[1]))
     
     def manhattan_distance(self, coord_o, coord_f):
         return abs(coord_o[0]-coord_f[0]) + abs(coord_o[1]-coord_f[1])
-
-    def capture_wall_collision(self, agent):
-        min_dist= 1000
-        first_wall= (0,0)
-        last_wall= (0,0)
-        target_index= 0
-        left_collision= False
-        right_collision= False
-        for i in range(self.left_bound.shape[0]):
-            if min_dist > self.manhattan_distance(agent.hitbox.topleft, self.left_bound[i,:]):
-                min_dist= self.manhattan_distance(agent.hitbox.topleft, self.left_bound[i,:])
-                target_index= i
-        if target_index < self.left_bound.shape[0] - 1:
-            first_wall= tuple(self.left_bound[target_index,:])
-            last_wall= tuple(self.left_bound[target_index+1,:])
-        else:
-            first_wall= tuple(self.left_bound[target_index-1,:])
-            last_wall= tuple(self.left_bound[target_index,:])
-        left_collision= agent.wall_collision(first_wall, last_wall)
-        if not left_collision:
-            if target_index < self.left_bound.shape[0] - 1 and target_index > 0:
-                prev_wall= tuple(self.left_bound[target_index-1,:])
-                left_collision= agent.wall_collision(prev_wall, first_wall)
-        for i in range(self.right_bound.shape[0]):
-            if min_dist > self.manhattan_distance(agent.hitbox.topright, self.right_bound[i,:]):
-                min_dist= self.manhattan_distance(agent.hitbox.topright, self.right_bound[i,:])
-                target_index= i
-        if target_index < self.right_bound.shape[0] - 1:
-            first_wall= tuple(self.right_bound[target_index,:])
-            last_wall= tuple(self.right_bound[target_index+1,:])
-        else:
-            first_wall= tuple(self.right_bound[target_index-1,:])
-            last_wall= tuple(self.right_bound[target_index,:])
-        right_collision= agent.wall_collision(first_wall, last_wall)
-        if not right_collision:
-            if target_index < self.right_bound.shape[0] - 1 and target_index > 0:
-                prev_wall= tuple(self.right_bound[target_index-1,:])
-                right_collision= agent.wall_collision(prev_wall, first_wall)
-        return left_collision, right_collision
     
-    def thread_evaluate_agents(self, agents):
-        fitness_array= np.zeros(len(agents))
-        WINDOW.fill((255,255,255))
-        WINDOW.blit(FINISH_LINE, (400, 0))
-        evaluation_array= np.array([GARatingThread(agent, self) for agent in agents], dtype= GARatingThread)
-        agents_actions= np.zeros(len(agents))
-        agents_left_collisions= np.array([False for a in range(len(agents))])
-        agents_right_collision= np.array([False for a in range(len(agents))])
-        for agent in agents:
-            WINDOW.blit(agent.skin, agent.hitbox)
-            WINDOW.blit(agent.hitbox_surface, agent.surf)
-        self.draw_walls(isLeft= True)
-        self.draw_walls(isLeft= False)
+    def bresenham_algorithm(self, first_point, last_point):
+        coords= np.empty((0,2))
+        new_point= []
+        fp_tuple= None
+        lp_tuple= None
+        # Détermination de la direction de la ligne
+        steep = last_point[1] - first_point[1] > 0 or last_point[0] - first_point[0] > 0
+        isFlip= False
+        # S'assurer que la ligne se dessine de gauche à droite
+        if first_point[0] > last_point[0] or first_point[1] > last_point[1]:
+            fp_tuple= (last_point[0], last_point[1])
+            lp_tuple= (first_point[0], first_point[1])
+        # Initialisation
+        if fp_tuple is not None and lp_tuple is not None:
+            first_point= fp_tuple
+            last_point= lp_tuple
+        if abs(int(first_point[0]) - int(last_point[0])) >= abs(int(first_point[1]) - int(last_point[1])):
+            dx = last_point[0] - first_point[0]
+            dy = abs(last_point[1] - first_point[1])
+            error = dx / 2
+            ystep = -1 if first_point[1] > last_point[1] else 1
+            # Boucle principale
+            y = first_point[1]
+            for x in range(int(first_point[0]), int(last_point[0]) + 1):
+                new_point= [np.float32(x),y]
+                coords= np.append(coords, [new_point], axis= 0)
+                error -= dy
+                if error < 0:
+                    y += ystep
+                    error += dx
+        else:
+            dx = abs(last_point[0] - first_point[0])
+            dy = last_point[1] - first_point[1]
+            error = dy / 2
+            xstep = -1 if first_point[0] > last_point[0] else 1
+            x= first_point[0]
+            for y in range(int(first_point[1]), int(last_point[1]) + 1):
+                new_point= [x,np.float32(y)]
+                coords= np.append(coords, [new_point], axis= 0)
+                error -= dx
+                if error < 0:
+                    x += xstep
+                    error += dy
+        # Inversion de la ligne si nécessaire
+        return coords
+    
+    def build_wall(self, isLeft, pos):
+        if isLeft == True:
+            if self.prev_left_position != None:
+                self.num_lwall += 1
+                for position in self.bresenham_algorithm(self.prev_left_position, pos):
+                    wall= Sprite()
+                    wall.image= pygame.image.load("Software_Game_Assets\wall.png")
+                    wall.rect= wall.image.get_rect()
+                    wall.rect.center= position
+                    STATIC_SPRITES.add(wall)
+            self.prev_left_position= pos
+        elif isLeft == False:
+            if self.prev_right_position != None:
+                self.num_rwall += 1
+                for position in self.bresenham_algorithm(self.prev_right_position, pos):
+                    wall= Sprite()
+                    wall.image= pygame.image.load("Software_Game_Assets\wall.png")
+                    wall.rect= wall.image.get_rect()
+                    wall.rect.center= position
+                    STATIC_SPRITES.add(wall)
+            self.prev_right_position= pos
+        STATIC_SPRITES.draw(WINDOW)
         pygame.display.update()
-        i= 0
-        prev_dist= 1000
-        while i < len(agents[0].strategy):
-            self.clock.tick(10)
-            for a, eval in enumerate(evaluation_array):
-                if fitness_array[a] <= -500:
-                    continue
-                else:
-                    eval.run(i)
-            for j, eval in enumerate(evaluation_array):
-                agents_actions[j], agents_left_collisions[j], agents_right_collision[j]= eval.get_data()
-            WINDOW.fill((255,255,255))
-            WINDOW.blit(FINISH_LINE, (400, 0))
-            for agent in agents:
-                WINDOW.blit(agent.skin, agent.hitbox)
-                WINDOW.blit(agent.hitbox_surface, agent.surf)
-            self.draw_walls(isLeft= True)
-            self.draw_walls(isLeft= False)
-            pygame.display.update()
-            if np.max(fitness_array) <= -500:
-                break
-            for k, agent in enumerate(agents):
-                if (agent.hitbox.top > 900 or agent.hitbox.bottom > 900) or (agent.surf.top > 900 or agent.surf.bottom > 900):
-                    fitness_array[k]= -500
-                if agents_left_collisions[k] or agents_right_collision[k]:
-                    fitness_array[k]-= 50
-                elif agent.position[0] >= 400 and agent.position[0] <= 600 and agent.position[1] <= 24:
-                    fitness_array[k]+= 2000
-                if fitness_array[k] <= -500:
-                    fitness_array[k] = -500
-                else:
-                        agent_dist= self.manhattan_distance(agent.hitbox.center, (500, 24))
-                        if prev_dist >= agent_dist:
-                            prev_dist= agent_dist
-                            fitness_array[k]+= 50
-                            if agents_actions[k] == 2:
-                                fitness_array[k]+= 10
+        for event in pygame.event.get():
+            pass
+        print("Left wall: ", self.num_lwall)
+        print("Right wall: ", self.num_rwall)
+
+    def multi_eval_agents(self, agents):
+        agents_group= Group([agent for agent in agents])
+        stop_eval_array= [False for i in range(len(agents))]
+        self.clock.tick(3)
+        fitness= np.zeros(len(agents))
+        WINDOW.fill((255,255,255))
+        agents_group.draw(WINDOW)
+        STATIC_SPRITES.draw(WINDOW)
+        for i in range(len(agents[0].strategy)):
+            for j, agent in enumerate(agents):
+                if stop_eval_array[j] == False:
+                    action= agent.select_action(agent.strategy[i])
+                    collided_sprites= pygame.sprite.spritecollide(agent, STATIC_SPRITES, False)
+                    if (agent.rect.top > 900 or agent.rect.bottom > 900) or (agent.surf.top > 900 or agent.surf.bottom > 900):
+                        fitness[j]= -500
+                    elif len(collided_sprites) != 0 and FINISH_LINE not in collided_sprites:
+                        fitness[j]-= 50
+                        stop_eval_array[j]= True
+                    elif FINISH_LINE in collided_sprites:
+                        fitness[j]+= 2000
+                        stop_eval_array[j]= True
+                    if fitness[j] <= -500:
+                            stop_eval_array[j]= True
+                    else:
+                        agent_dist= self.manhattan_distance(agent.rect.center, (500, 24))
+                        if self.best_dist >= agent_dist:
+                            self.prev_dist= agent_dist
+                            fitness[j]+= 50
+                            if action == 2:
+                                fitness[j]+= 10
                             else:
-                                fitness_array[k]+= 5
+                                fitness[j]+= 5
                         else:
-                            fitness_array[k]-= 3
-                            if agents_actions[k] == 2:
-                                fitness_array[k]+= 10
+                            fitness[j]-= 3
+                            if action == 2:
+                                fitness[j]+= 10
                             else:
-                                fitness_array[k]+= 5
-            for event in pygame.event.get():
-                pass
-            i+=1
-        return fitness_array
+                                fitness[j]+= 5
+                else:
+                    continue
+                WINDOW.fill((255,255,255))
+                STATIC_SPRITES.draw(WINDOW)
+                agents_group.draw(WINDOW)
+                pygame.display.update()
+                for event in pygame.event.get():
+                    pass
+        print("Fitness évaluées= ", fitness)
+        return fitness
 
     def evaluate_agent(self, agent):
+        self.clock.tick(60)
         fitness= 0
         WINDOW.fill((255,255,255))
-        WINDOW.blit(agent.skin, agent.hitbox)
-        WINDOW.blit(agent.hitbox_surface, agent.surf)
-        WINDOW.blit(FINISH_LINE, (400, 0))
-        self.draw_walls(isLeft= True)
-        self.draw_walls(isLeft= False)
-        pygame.display.update()
-        i= 0
-        prev_dist= 1000
-        while i < len(agent.strategy):
-            self.clock.tick(60)
-            WINDOW.fill((255,255,255))
-            WINDOW.blit(agent.skin, agent.hitbox)
-            WINDOW.blit(agent.hitbox_surface, agent.surf)
-            WINDOW.blit(FINISH_LINE, (400, 0))
-            self.draw_walls(isLeft= True)
-            self.draw_walls(isLeft= False)
-            pygame.display.update()
+        agent.draw(WINDOW)
+        STATIC_SPRITES.draw(WINDOW)
+        for i in range(0, len(agent.strategy)):
             action= agent.select_action(agent.strategy[i])
-            isLeftCollision, isRightCollision= env.capture_wall_collision(agent)
+            collided_sprites= pygame.sprite.spritecollide(agent, STATIC_SPRITES, False)
+            if (agent.rect.top > 900 or agent.rect.bottom > 900) or (agent.surf.top > 900 or agent.surf.bottom > 900):
+                fitness= -500
+            elif len(collided_sprites) != 0 and FINISH_LINE not in collided_sprites:
+                fitness-= 50
+                self.stop_eval= True
+            elif FINISH_LINE in collided_sprites:
+                fitness+= 2000
+                self.stop_eval= True
+            if fitness <= -500:
+                    self.stop_eval= True
+            else:
+                agent_dist= self.manhattan_distance(agent.rect.center, (500, 24))
+                if self.best_dist >= agent_dist:
+                    self.prev_dist= agent_dist
+                    fitness+= 50
+                    if action == 2:
+                        fitness+= 10
+                    else:
+                        fitness+= 5
+                else:
+                    fitness-= 3
+                    if action == 2:
+                        fitness+= 10
+                    else:
+                        fitness+= 5
+            WINDOW.fill((255,255,255))
+            agent.draw(WINDOW)
+            STATIC_SPRITES.draw(WINDOW)
+            pygame.display.update()
             for event in pygame.event.get():
                 pass
-            pygame.display.update()
-            if (agent.hitbox.top > 900 or agent.hitbox.bottom > 900) or (agent.surf.top > 900 or agent.surf.bottom > 900):
-                fitness= -500
-                break
-            if isLeftCollision or isRightCollision:
-                fitness-= 50
-            elif agent.position[0] >= 400 and agent.position[0] <= 600 and agent.position[1] <= 24:
-                fitness+= 2000
-                break
-            if fitness <= -500:
-                break
-            else:
-                    agent_dist= self.manhattan_distance(agent.hitbox.center, (500, 24))
-                    if prev_dist >= agent_dist:
-                        prev_dist= agent_dist
-                        fitness+= 50
-                        if action == 2:
-                            fitness+= 10
-                        else:
-                            fitness+= 5
-                    else:
-                        fitness-= 3
-                        if action == 2:
-                            fitness+= 10
-                        else:
-                            fitness+= 5
-            i+= 1
-        print("Score_Agent=", fitness)
         return fitness
 
 
 
 if __name__ == "__main__":
-    env= Environnement()
-    ae_agents= np.array([Agent(velocity= 10, rotation_angle= 45, 
+    ae_agents= [Agent(velocity= 10, rotation_angle= 45, 
                                position= ((WIDTH/2) - (PLAYER_WIDTH / 2), HEIGHT - (PLAYER_HEIGHT/1.7)),
-                               skin= "Software_Game_Assets/car1.png") for i in range(10)], dtype= Agent)
+                               skin= "Software_Game_Assets/car1.png") for i in range(10)]
+    env= Environnement(agents_to_optimize= ae_agents)
     ga= None
     main_agent= Agent(velocity= 10, rotation_angle= 45, position= ((WIDTH/2) - (PLAYER_WIDTH / 2), HEIGHT - (PLAYER_HEIGHT/1.7)))
     run= True
     WINDOW.fill((255,255,255))
-    WINDOW.blit(main_agent.skin, main_agent.hitbox)
-    WINDOW.blit(FINISH_LINE, (400, 0))
-    WINDOW.blit(main_agent.hitbox_surface, main_agent.surf)
-    pygame.display.update()
+    env.agents.draw(WINDOW)
+    STATIC_SPRITES.draw(WINDOW)
     best_strat= []
     fitness_score= 0
     isPrinted= False
     ga= None
+    pygame.display.update()
     while run:
         env.clock.tick(3)
-        if env.left_bound.shape[0] > 1:
-                env.draw_walls(isLeft= True)
-        if env.right_bound.shape[0] > 2:
-            env.draw_walls(isLeft= False)
-            if env.left_bound.shape[0] > 2:
+        STATIC_SPRITES.draw(WINDOW)
+        if env.num_lwall > 3:
+            if env.num_rwall > 3:
                 if ga is None:
                     #ga= GeneticAlgorithm(agents= ae_agents, evaluate= env.evaluate_agent)
-                    ga= GeneticAlgorithm(agents= ae_agents, evaluate= env.thread_evaluate_agents, isThreadEvaluation= True)
+                    ga= GeneticAlgorithm(agents= ae_agents, evaluate= env.multi_eval_agents, isThreadEvaluation= True)
                     if ga.isFinished == False:
                         best_strat, fitness_score= ga.start_optimization(max_nfe=200)
         if ga is not None:
@@ -240,10 +251,8 @@ if __name__ == "__main__":
                 run= False
                 break     
             if event.type == MOUSEBUTTONDOWN:
-                if event.button == 1:   # Left click
-                    print("Left Wall: ", pygame.mouse.get_pos())       #Dans le Tuple on a (Colonne, Ligne)
-                    env.left_bound= np.append(env.left_bound, [pygame.mouse.get_pos()], axis= 0)
-                elif event.button == 3: # Right click
-                    print("Right Wall: ", pygame.mouse.get_pos())       #Dans le Tuple on a (Colonne, Ligne)
-                    env.right_bound= np.append(env.right_bound, [pygame.mouse.get_pos()], axis= 0)
+                if event.button == 1:   # Left click      
+                    env.build_wall(isLeft= True, pos= pygame.mouse.get_pos())   #Dans le Tuple on a (Colonne, Ligne)
+                elif event.button == 3: # Right click    
+                    env.build_wall(isLeft= False, pos= pygame.mouse.get_pos())  #Dans le Tuple on a (Colonne, Ligne)
     pygame.quit()
