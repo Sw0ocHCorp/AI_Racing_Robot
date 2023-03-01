@@ -23,26 +23,19 @@ class Agent():
 
     def rotate(self, isLeft, point):
         if isLeft:
-            #print("Left")
             self.angle += self.rotation_angle
         else:
-            #print("Right")
             self.angle -= self.rotation_angle
-        if self.angle > 360 or self.angle < -360:
-            self.angle= abs(self.angle) - 360
+        if self.angle > 360:
+            self.angle= 0
         self.sprite.angle= self.angle
         self.sprite.position= point
-        """print("--> Si mouvement")
-        print("Modif X= " + str(self.velocity * math.sin(math.radians(-self.angle))) + "Modif Y= " + str(self.velocity * math.cos(math.radians(-self.angle))))
-        print("--------------------------")"""
-
-    def movement(self, isForward= True):
-        """print("Angle: ", self.angle)
-        print("Modif X= " + str(self.velocity * math.sin(math.radians(-self.angle))) + "Modif Y= " + str(self.velocity * math.cos(math.radians(-self.angle))))
-        print("--------------------------")"""
-        self.sprite.center_x += self.velocity * math.sin(math.radians(-self.angle))
-        self.sprite.center_y += self.velocity * math.cos(math.radians(-self.angle))
         
+    def movement(self, isForward= True):
+        radian_angle= math.radians(self.angle)
+        self.sprite.center_x += self.velocity * math.sin(radian_angle)
+        self.sprite.center_y += self.velocity * math.cos(radian_angle)
+
     def select_action(self, action):
         if action == DROITE:
             self.rotate(False, self.sprite.position)
