@@ -11,20 +11,19 @@ WIDTH= 800
 player_img= Image.open("Software_Game_Assets\Player_car_final.png")
 PLAYER_WIDTH, PLAYER_HEIGHT= player_img.size
 class GeneticAlgorithm():
-    def __init__(self, agents, limit_nfe= 100):
+    def __init__(self, agents, evaluate, isThreadEvaluation= False):
+        print("Generation #0")
+        print("-----------------------------")
+        self.isThreadEvaluation= isThreadEvaluation
         self.agents= agents
         self.population = np.array([agent.strategy for agent in self.agents])
         self.l= self.population.shape[1]
-        self.limit_nfe= limit_nfe
-
-    def set_pop_fitness(self, fitness_array):
-        self.fitness= fitness_array
-    
-    def set_offspring_fitness(self, fitness_array):
-        self.offspring_fitness= fitness_array
-    
-    def set_offspring_stategies(self, offspring_strategies):
-        self.offspring_strategies= offspring_strategies
+        self.evaluate= evaluate
+        if self.isThreadEvaluation:
+            self.fitness= evaluate(self.agents)
+        else:
+            self.fitness = np.array([self.evaluate(agent) for agent in self.agents])
+        self.isFinished= False
 
     def selection(self, t=2):
         #Implémenter le Tournament selection
@@ -51,29 +50,28 @@ class GeneticAlgorithm():
                 individual[index_flip]= abs(1-individual[index_flip])
         return individual
 
-    def create_offspring(self, t=2):
+    def create_offspring(self, parents_strategies, t=2):
         offspring= np.empty((0, self.l))
-        for i in range(len(self.population)):
+        for i in range(len(parents_strategies)):
             parent1= self.selection(t)
             parent2= self.selection(t)
             childs= self.crossover(parent1, parent2)
             childs= np.array([self.mutation(child) for child in childs])
             offspring= np.concatenate((offspring, childs), axis= 0)
         return offspring
-    
-    def distribute_strategies(self, strategies):
-        agents_created= None
-        agents_created= np.array([Agent(velocity= 10, rotation_angle= 45, 
-                                    position= ((WIDTH/2) - (PLAYER_WIDTH / 2), (PLAYER_HEIGHT/1.7)),
-                                    skin= "Software_Game_Assets/car1.png") for i in range(strategies.shape[0])], dtype= Agent)
-        for i in range(len(agents_created)):
-            agents_created[i].strategy= strategies[i]
-        return agents_created
 
-    def replacement(self, k= 1):
-        new_generation= np.empty((0, self.population.shape[1]))
+    def replacement(self, parents_strategies, offspring_strategies, k= 1):
+        parents_strategies= parents_strategies.astype(int)
+        offspring_strategies= offspring_strategies.astype(int)
+        new_generation= np.empty((0, parents_strategies.shape[1]))
         new_fitness= np.array([])
-        pop_size= self.population.shape[1]
+        pop_size= len(parents_strategies)
+        #Evaluer la nouvelle population(Offspring)
+        offspring_agents= self.distribute_strategies(offspring_strategies)
+        if self.isThreadEvaluation:
+            fitness_offspring= self.evaluate(offspring_agents)
+        else:
+            fitness_offspring= np.array([self.evaluate(agent) for agent in offspring_agents])
         #Elitisme --> garder les K meilleurs individus de la Génération précédente
         best_index= np.argmax(self.fitness)
         if self.fitness[best_index] > 0:
@@ -84,11 +82,37 @@ class GeneticAlgorithm():
                     new_generation= np.vstack((new_generation, self.population[best_index]))
                     new_fitness= np.append(new_fitness, self.fitness[best_index])
                     self.fitness= np.delete(self.fitness, best_index)
-        #Remplir le reste population avec les individus de la nouvelle population
-        new_generation= np.concatenate((new_generation, self.offspring_strategies[:pop_size-len(new_generation)]), axis= 0)
-        new_fitness= np.concatenate((new_fitness, self.offspring_fitness[:pop_size-len(new_fitness)]), axis= None)
+        new_generation= np.concatenate((new_generation, offspring_strategies[:pop_size-len(new_generation)]), axis= 0)
+        new_fitness= np.concatenate((new_fitness, fitness_offspring[:pop_size-len(new_fitness)]), axis= None)
         self.population= np.array(new_generation)
-        return new_fitness
+        self.agents= self.distribute_strategies(self.population)
+        self.fitness= np.array(new_fitness)
+        #Remplir le reste population avec les individus de la nouvelle population
+
+    def start_optimization(self, max_nfe= 1000):
+        num_gen= 1
+        nfe= 0
+        nfe += len(self.population)
+        while nfe < max_nfe:
+            print("-----------------------------")
+            print("==> Generation #" + str(num_gen))
+            print("-----------------------------")
+            offspring= self.create_offspring(self.population)
+            self.replacement(self.population, offspring, k= int(self.population.shape[0]//2))
+            nfe += len(self.population)
+            num_gen += 1
+        best_index= np.argmax(self.fitness)
+        self.isFinished= True
+        return self.population[best_index], self.fitness[best_index]
+    
+    def distribute_strategies(self, strategies):
+        agents_created= None
+        agents_created= np.array([Agent(velocity= 10, rotation_angle= 45, 
+                                    position= ((WIDTH/2) - (PLAYER_WIDTH / 2), HEIGHT - (PLAYER_HEIGHT/1.7)),
+                                    skin= "Software_Game_Assets/car1.png") for i in range(strategies.shape[0])], dtype= Agent)
+        for i in range(len(agents_created)):
+            agents_created[i].strategy= strategies[i]
+        return agents_created
 
 # --> Differential Evolution Algorithm <-- #
 class DifferentialEvolution:
