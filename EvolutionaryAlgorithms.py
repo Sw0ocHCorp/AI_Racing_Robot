@@ -25,6 +25,10 @@ class GeneticAlgorithm():
         else:
             self.fitness = np.array(self.evaluate(self.agents))
         self.isFinished= False
+        self.max_nfe= 1000
+
+    def set_max_nfe(self, max_nfe):
+        self.max_nfe= max_nfe
 
     def selection(self, t=2):
         #Implémenter le Tournament selection
@@ -90,17 +94,17 @@ class GeneticAlgorithm():
         self.fitness= np.array(new_fitness)
         #Remplir le reste population avec les individus de la nouvelle population
 
-    def start_optimization(self, max_nfe= 1000):
+    def start_optimization(self):
         num_gen= 1
         nfe= 0
         nfe += len(self.population)
-        while nfe < max_nfe:
+        while nfe < self.max_nfe:
             print("-----------------------------")
             print("==> Generation #" + str(num_gen))
             print("-----------------------------")
             offspring= self.create_offspring(self.population)
+            nfe += len(offspring)
             self.replacement(self.population, offspring, k= int(self.population.shape[0]//2))
-            nfe += len(self.population)
             num_gen += 1
         best_index= np.argmax(self.fitness)
         self.isFinished= True

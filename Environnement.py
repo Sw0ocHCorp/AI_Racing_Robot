@@ -7,6 +7,8 @@ import math
 from pygame.sprite import *
 from Agent import Agent
 from EvolutionaryAlgorithms import GeneticAlgorithm, DifferentialEvolution, GARatingThread
+from MenuWidget import MenuWidget
+import paho.mqtt.client as mqtt
 
 PURPLE= (137, 0, 255)
 PLAYER_CAR= pygame.image.load("Software_Game_Assets\Player_car_final.png")
@@ -25,20 +27,20 @@ WINDOW= pygame.display.set_mode((WIDTH, HEIGHT))
 
 
 class Environnement:
-    def __init__(self, agents_to_optimize):
+    def __init__(self):
+        self.mqtt_client= mqtt.Client(client_id= "AI_Racing_Robot")
+        self.mqtt_client.connect("test.mosquitto.org")
         self.right_bound= np.empty((0,2))
         self.left_bound= np.empty((0,2))
         self.clock= pygame.time.Clock()
-        self.agents= Group()
         self.num_lwall= 0
         self.num_rwall= 0
         self.prev_left_position= None
         self.prev_right_position= None
         self.best_dist= 1000
         self.stop_eval= False
-        self.agents= Group()
-        for agent in agents_to_optimize:
-            self.agents.add(agent)
+        self.menu= MenuWidget(WINDOW)
+        self.isAlive= False
 
     def euclidian_distance(self, coord_o, coord_f):
         return math.sqrt(abs(coord_o[0]-coord_f[0]) + abs(coord_o[1]-coord_f[1]))
@@ -114,6 +116,7 @@ class Environnement:
                     STATIC_SPRITES.add(wall)
             self.prev_right_position= pos
         STATIC_SPRITES.draw(WINDOW)
+        self.menu.draw_menu()
         pygame.display.update()
         for event in pygame.event.get():
             pass
@@ -125,9 +128,12 @@ class Environnement:
         stop_eval_array= [False for i in range(len(agents))]
         self.clock.tick(3)
         fitness= np.zeros(len(agents))
+        #WINDOW.fill((51,51,51))
         WINDOW.fill((255,255,255))
         agents_group.draw(WINDOW)
         STATIC_SPRITES.draw(WINDOW)
+        self.menu.draw_menu()
+        pygame.display.update()
         for i in range(len(agents[0].strategy)):
             for j, agent in enumerate(agents):
                 if stop_eval_array[j] == False:
@@ -160,9 +166,11 @@ class Environnement:
                                 fitness[j]+= 5
                 else:
                     continue
+                #WINDOW.fill((51,51,51))
                 WINDOW.fill((255,255,255))
                 STATIC_SPRITES.draw(WINDOW)
                 agents_group.draw(WINDOW)
+                self.menu.draw_menu()
                 pygame.display.update()
                 for event in pygame.event.get():
                     pass
@@ -170,11 +178,14 @@ class Environnement:
         return fitness
 
     def evaluate_agent(self, agent):
+        agent_group= Group([agent])
         self.clock.tick(60)
         fitness= 0
+        #WINDOW.fill((51,51,51))
         WINDOW.fill((255,255,255))
-        agent.draw(WINDOW)
+        agent_group.draw(WINDOW)
         STATIC_SPRITES.draw(WINDOW)
+        self.menu.draw_menu()
         for i in range(0, len(agent.strategy)):
             action= agent.select_action(agent.strategy[i])
             collided_sprites= pygame.sprite.spritecollide(agent, STATIC_SPRITES, False)
@@ -203,27 +214,37 @@ class Environnement:
                         fitness+= 10
                     else:
                         fitness+= 5
+            #WINDOW.fill((51,51,51))
             WINDOW.fill((255,255,255))
-            agent.draw(WINDOW)
+            agent_group.draw(WINDOW)
             STATIC_SPRITES.draw(WINDOW)
+            self.menu.draw_menu()
             pygame.display.update()
             for event in pygame.event.get():
                 pass
         return fitness
 
+    def send_optimum_strategy(self, best_strat):
+        mqtt_message=""
+        for action in best_strat:
+            mqtt_message+= str(int(action))
+        self.mqtt_client.publish("AI_RACING_Robot/Best_Strategy", mqtt_message)
+        time.sleep(1)
 
 
 if __name__ == "__main__":
-    ae_agents= [Agent(velocity= 10, rotation_angle= 45, 
-                               position= ((WIDTH/2) - (PLAYER_WIDTH / 2), HEIGHT - (PLAYER_HEIGHT/1.7)),
-                               skin= "Software_Game_Assets/car1.png") for i in range(10)]
-    env= Environnement(agents_to_optimize= ae_agents)
+    canWritePop= False
+    canWriteNfe= False
+    ae_agents= []
+    env= Environnement()
     ga= None
-    main_agent= Agent(velocity= 10, rotation_angle= 45, position= ((WIDTH/2) - (PLAYER_WIDTH / 2), HEIGHT - (PLAYER_HEIGHT/1.7)))
     run= True
+    main_agent= Group(Agent(velocity= 10, rotation_angle= 45, position= ((WIDTH/2) - (PLAYER_WIDTH / 2), HEIGHT - (PLAYER_HEIGHT/1.7))))
+    #WINDOW.fill((51,51,51))
     WINDOW.fill((255,255,255))
-    env.agents.draw(WINDOW)
+    main_agent.draw(WINDOW)
     STATIC_SPRITES.draw(WINDOW)
+    env.menu.draw_menu()
     best_strat= []
     fitness_score= 0
     isPrinted= False
@@ -232,16 +253,22 @@ if __name__ == "__main__":
     while run:
         env.clock.tick(3)
         STATIC_SPRITES.draw(WINDOW)
-        if env.num_lwall > 3:
-            if env.num_rwall > 3:
-                if ga is None:
-                    #ga= GeneticAlgorithm(agents= ae_agents, evaluate= env.evaluate_agent)
-                    ga= GeneticAlgorithm(agents= ae_agents, evaluate= env.multi_eval_agents, isThreadEvaluation= True)
-                    if ga.isFinished == False:
-                        best_strat, fitness_score= ga.start_optimization(max_nfe=200)
+        env.menu.draw_menu()
+        if env.isAlive:
+            if ga is None:
+                #ga= GeneticAlgorithm(agents= main_agent, evaluate= env.evaluate_agent)
+                ae_agents= [Agent(velocity= 10, rotation_angle= 45, 
+                                position= ((WIDTH/2) - (PLAYER_WIDTH / 2), HEIGHT - (PLAYER_HEIGHT/1.7)),
+                                skin= "Software_Game_Assets/car1.png") for i in range(int(env.menu.pop_buffer))]
+                ga= GeneticAlgorithm(agents= ae_agents, evaluate= env.multi_eval_agents, isThreadEvaluation= True)
+                ga.set_max_nfe(int(env.menu.nfe_buffer))
+            #env.evaluate_agent(main_agent)
+            isPrinted= False
+            best_strat, fitness_score= ga.start_optimization()
         if ga is not None:
             if ga.isFinished and isPrinted == False:
                 isPrinted= True
+                env.isAlive= False
                 print("Best_Strat=", best_strat)
                 print("Fitness_Score=", fitness_score)
         pygame.display.update()
@@ -250,9 +277,51 @@ if __name__ == "__main__":
             if event.type == pygame.QUIT:
                 run= False
                 break     
-            if event.type == MOUSEBUTTONDOWN:
-                if event.button == 1:   # Left click      
-                    env.build_wall(isLeft= True, pos= pygame.mouse.get_pos())   #Dans le Tuple on a (Colonne, Ligne)
-                elif event.button == 3: # Right click    
-                    env.build_wall(isLeft= False, pos= pygame.mouse.get_pos())  #Dans le Tuple on a (Colonne, Ligne)
+            elif event.type == MOUSEBUTTONDOWN:
+                if event.button == 1:   # Left click 
+                    if (env.menu.robot_pb_interaction(pygame.mouse.get_pos()) == False) or (env.menu.experiment_pb_interaction(pygame.mouse.get_pos()) == False):
+                        if env.menu.pop_entry_interaction(pygame.mouse.get_pos()) == True:
+                            canWritePop= True
+                            canWriteNfe= False
+                        elif env.menu.nfe_entry_interaction(pygame.mouse.get_pos()) == True:
+                            canWriteNfe= True
+                            canWritePop= False
+                        elif env.menu.robot_pb_interaction(pygame.mouse.get_pos()) == True:
+                                if ga is not None and ga.isFinished == True:
+                                    env.send_optimum_strategy(best_strat)
+                        elif env.menu.experiment_pb_interaction(pygame.mouse.get_pos()) == True:
+                            if ga is not None and ga.isFinished == True:
+                                ae_agents= [Agent(velocity= 10, rotation_angle= 45, 
+                                                position= ((WIDTH/2) - (PLAYER_WIDTH / 2), HEIGHT - (PLAYER_HEIGHT/1.7)),
+                                                skin= "Software_Game_Assets/car1.png") for i in range(int(env.menu.pop_buffer))]
+                                ga= GeneticAlgorithm(agents= ae_agents, evaluate= env.multi_eval_agents, isThreadEvaluation= True)
+                                ga.set_max_nfe(env.menu.nfe_buffer)
+                            env.isAlive= True
+                            canWritePop= False
+                            canWriteNfe= False
+                        else:
+                            env.build_wall(isLeft= True, pos= pygame.mouse.get_pos())   #Dans le Tuple on a (Colonne, Ligne)
+                    else:
+                        canWriteNfe= False
+                        canWritePop= False
+                elif event.button == 3: # Right click   
+                    collide_pop_entry= env.menu.pop_entry_interaction(pygame.mouse.get_pos())
+                    collide_nfe_entry= env.menu.nfe_entry_interaction(pygame.mouse.get_pos())
+                    collide_robot_pb= env.menu.robot_pb_interaction(pygame.mouse.get_pos())
+                    collide_experiment_pb= env.menu.experiment_pb_interaction(pygame.mouse.get_pos()) 
+                    if collide_pop_entry == False and collide_nfe_entry == False and collide_robot_pb == False and collide_experiment_pb == False:
+                        env.build_wall(isLeft= False, pos= pygame.mouse.get_pos())  #Dans le Tuple on a (Colonne, Ligne)
+
+            elif event.type == pygame.KEYDOWN:
+                if canWritePop == True:
+                    if event.key == pygame.K_BACKSPACE:
+                        env.menu.pop_backspace()
+                    else:
+                        env.menu.pop_write_text(event.unicode) 
+                if canWriteNfe == True:
+                    if event.key == pygame.K_BACKSPACE:
+                        env.menu.nfe_backspace()
+                    else:
+                        env.menu.nfe_write_text(event.unicode)     
+
     pygame.quit()
