@@ -95,8 +95,6 @@ PROJET_AI_ROBOT_RACING_V0.4:
 
 
 .Fonctionnalités à Développer
--> Tester le Programme à plus grande échelle (sur plusieurs générations)
 -> Adapter les valeur de récompense pour faire converger la population de l'algorithme 
--> Ajouter une GUI à l'application Python Arcade ou Intégrer l'Environnement dans une application GTK
-
+-> Dev côté NodeMCU Arduino
 -----------------------------------------------------------------------------------
