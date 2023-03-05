@@ -1,17 +1,42 @@
 import pygame
 from pygame.sprite import *
 from PIL import Image
+import numpy as np
+from Agent import Agent
 
 rob_pb= Image.open("Software_Game_Assets/sendRobot_pushButton.png")
 exp_pb= Image.open("Software_Game_Assets/sendRobot_pushButton.png")
 txt_entry= Image.open("Software_Game_Assets/text_entry.png")
+agents_img= pygame.image.load("Software_Game_Assets/car1.png")
+agents_width= agents_img.get_rect().width
+agents_height= agents_img.get_rect().height
+agents_img= pygame.transform.scale(agents_img, (int(agents_width/2), int(agents_height/2)))
+
+best_agents_img= pygame.image.load("Software_Game_Assets/Player_car_final.png")
+best_agents_width= best_agents_img.get_rect().width
+best_agents_height= best_agents_img.get_rect().height
+best_agents_img= pygame.transform.scale(best_agents_img, (int(best_agents_width/2), int(best_agents_height/2)))
+
+opti_img= pygame.image.load("Software_Game_Assets/arrow_optimization.png")
+opti_width= opti_img.get_rect().width
+opti_height= opti_img.get_rect().height
+opti_img= pygame.transform.scale(opti_img, (int(opti_width/25), int(opti_height/25)))
+opti_img= pygame.transform.rotate(opti_img, 180)
+pygame.font.init()
+SCORE_FONT= pygame.font.Font("Software_Game_Assets/PressStart2P-vaV7.ttf", 7)
 
 
 class MenuWidget:
     def __init__(self, window):
         pygame.font.init()
         self.font= pygame.font.Font("Software_Game_Assets/PressStart2P-vaV7.ttf", 10)
+        self.width_opti_img= np.zeros(10)
+        self.init_fit_dict= dict()
+        self.new_fit_dict= []
         self.menu_sprites= Group()
+        self.init_agents= Group()
+        self.new_agents= Group()
+        self.opti_sprites= Group()
         self.experiment_pb= Sprite()
         self.experiment_pb.image= pygame.image.load("Software_Game_Assets/runExp_pushButton.png")
         self.robot_pb= Sprite()
@@ -38,6 +63,7 @@ class MenuWidget:
         self.nfe_entry_rect= self.nfe_entry.rect
         self.pop_buffer= ""
         self.nfe_buffer= ""
+        self.last_height= 0
 
     def draw_menu(self):
         self.menu_sprites.draw(self.window)
@@ -52,6 +78,95 @@ class MenuWidget:
         self.window.blit(nfe_title[0], (self.nfe_entry_rect.left+10, self.nfe_entry_rect.top-24))
         self.window.blit(nfe_title[1], (self.nfe_entry_rect.left+10, self.nfe_entry_rect.top-12))
 
+    def set_init_fitness(self, fitness):
+        j= 0
+        reset_x_loc= False
+        sorted_fitness= sorted(fitness, reverse= True)
+        for i, f in enumerate(sorted_fitness):
+            if i == 0:
+                best_agent= Sprite()
+                best_agent.image= best_agents_img
+                best_agent.rect= best_agent.image.get_rect()
+                best_agent.rect.center= (800 + agents_width, 50)
+                self.width_opti_img[i]= 800 + agents_width
+                self.init_agents.add(best_agent)
+                fitness_buffer= SCORE_FONT.render(str(f), True, "black")
+                self.init_fit_dict[i]= (fitness_buffer, best_agent.rect.left, best_agent.rect.bottom + 5)
+            else:
+                self.width_opti_img[i]= 800 + agents_width + int(agents_width + 15)*i+1
+                agent= Sprite()
+                agent.image= agents_img
+                agent.rect= agent.image.get_rect()
+                if i % 10 == 0:
+                    j+=1
+                    reset_x_loc= True
+                if reset_x_loc:
+                    agent.rect.center= (800 + agents_width + int(agents_width + 15)*(i-j*10), 50 + agents_height*j)
+                else:
+                    agent.rect.center= (800 + agents_width + int(agents_width + 15)*i+1, 50 + agents_height*j)
+                fitness_buffer= SCORE_FONT.render(str(f), True, "black")
+                self.init_fit_dict[i]= (fitness_buffer, agent.rect.left, agent.rect.bottom + 5)
+                self.last_height= agent.rect.bottom + 15 
+                self.init_agents.add(agent)
+        sprite= Sprite()
+        sprite.image= opti_img
+        sprite.rect= sprite.image.get_rect()
+        sprite.rect.center= (800 + ((self.window.get_width() - 800)/2), self.last_height + 40)
+        self.last_height= sprite.rect.bottom + 5
+        self.opti_sprites.add(sprite)
+
+    def show_init_agents(self):
+        if len(self.init_agents.spritedict) > 0:
+            self.init_agents.draw(self.window)
+            self.opti_sprites.draw(self.window)
+            for i in self.init_fit_dict:
+                self.window.blit(self.init_fit_dict[i][0], (self.init_fit_dict[i][1], self.init_fit_dict[i][2]))
+    
+    def set_new_fitness(self, new_fitness):
+        sorted_fitness= sorted(new_fitness, reverse= True)
+        j=0
+        reset_x_loc= False
+        last_height= self.last_height
+        for i, f in enumerate(sorted_fitness):
+            if i == 0:
+                best_agent= Sprite()
+                best_agent.image= best_agents_img
+                best_agent.rect= best_agent.image.get_rect()
+                best_agent.rect.center= (800 + agents_width, last_height + 20)
+                self.new_agents.add(best_agent)
+                fitness_buffer= SCORE_FONT.render(str(f), True, "black")
+                self.new_fit_dict.append((fitness_buffer, best_agent.rect.left, best_agent.rect.bottom + 5))
+            else:
+                agent= Sprite()
+                agent.image= agents_img
+                agent.rect= agent.image.get_rect()
+                if i % 10 == 0:
+                    j+=1
+                    reset_x_loc= True
+                if reset_x_loc:
+                    agent.rect.center= (800 + agents_width + int(agents_width + 15)*(i-j*10), last_height + 20 + agents_height*j)
+                else:
+                    agent.rect.center= (800 + agents_width + int(agents_width + 15)*i, last_height +  20 + agents_height*j)
+                fitness_buffer= SCORE_FONT.render(str(f), True, "black")
+                self.new_fit_dict.append((fitness_buffer, agent.rect.left, agent.rect.bottom + 5))
+                self.last_height= agent.rect.bottom + 15 
+                self.new_agents.add(agent)
+        sprite= Sprite()
+        sprite.image= opti_img
+        sprite.rect= sprite.image.get_rect()
+        sprite.rect.center= (800 + ((self.window.get_width() - 800)/2), self.last_height + 40)
+        self.last_height= sprite.rect.bottom + 5
+        self.opti_sprites.add(sprite)
+        
+    def show_new_agents(self, isOptiAfter= True):
+        if len(self.new_agents.spritedict) > 0:
+            self.new_agents.draw(self.window)
+            if isOptiAfter:
+                self.opti_sprites.draw(self.window)
+            for i in range(len(self.new_fit_dict)):
+                self.window.blit(self.new_fit_dict[i][0], (self.new_fit_dict[i][1], self.new_fit_dict[i][2]))
+            
+
     def robot_pb_interaction(self, mouse_position):
         if self.robot_pb_rect.collidepoint(mouse_position):
             print("Send Strategy to Robot")
@@ -62,6 +177,7 @@ class MenuWidget:
     def experiment_pb_interaction(self, mouse_position):
         if self.experiment_pb_rect.collidepoint(mouse_position):
             print("Experiment Launched")
+            self.width_opti_img= np.zeros(int(self.pop_buffer))
             return True
         else:
             return False

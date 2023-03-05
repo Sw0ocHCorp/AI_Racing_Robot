@@ -20,7 +20,8 @@ FINISH_LINE.rect.topleft= (400, 0)
 player_img= Image.open("Software_Game_Assets\Player_car_final.png")
 PLAYER_WIDTH, PLAYER_HEIGHT= player_img.size
 HEIGHT= 900
-WIDTH= 800
+WIDTH= 1500
+WIDTH_ENV= 800
 WINDOW= pygame.display.set_mode((WIDTH, HEIGHT))
 
 
@@ -130,9 +131,12 @@ class Environnement:
         fitness= np.zeros(len(agents))
         #WINDOW.fill((51,51,51))
         WINDOW.fill((255,255,255))
+        pygame.draw.line(WINDOW, (0,0,0), (WIDTH_ENV, 0), (WIDTH_ENV, HEIGHT), 5)
         agents_group.draw(WINDOW)
         STATIC_SPRITES.draw(WINDOW)
         self.menu.draw_menu()
+        self.menu.show_init_agents()
+        self.menu.show_new_agents()
         pygame.display.update()
         for i in range(len(agents[0].strategy)):
             for j, agent in enumerate(agents):
@@ -168,9 +172,12 @@ class Environnement:
                     continue
                 #WINDOW.fill((51,51,51))
                 WINDOW.fill((255,255,255))
+                pygame.draw.line(WINDOW, (0,0,0), (WIDTH_ENV, 0), (WIDTH_ENV, HEIGHT), 5)
                 STATIC_SPRITES.draw(WINDOW)
                 agents_group.draw(WINDOW)
                 self.menu.draw_menu()
+                self.menu.show_init_agents()
+                self.menu.show_new_agents()
                 pygame.display.update()
                 for event in pygame.event.get():
                     pass
@@ -183,9 +190,12 @@ class Environnement:
         fitness= 0
         #WINDOW.fill((51,51,51))
         WINDOW.fill((255,255,255))
+        pygame.draw.line(WINDOW, (0,0,0), (WIDTH_ENV, 0), (WIDTH_ENV, HEIGHT), 5)
         agent_group.draw(WINDOW)
         STATIC_SPRITES.draw(WINDOW)
         self.menu.draw_menu()
+        self.menu.show_init_agents()
+        self.menu.show_new_agents()
         for i in range(0, len(agent.strategy)):
             action= agent.select_action(agent.strategy[i])
             collided_sprites= pygame.sprite.spritecollide(agent, STATIC_SPRITES, False)
@@ -219,6 +229,9 @@ class Environnement:
             agent_group.draw(WINDOW)
             STATIC_SPRITES.draw(WINDOW)
             self.menu.draw_menu()
+            self.menu.show_init_agents()
+            self.menu.show_new_agents()
+            pygame.draw.line(WINDOW, (0,0,0), (WIDTH_ENV, 0), (WIDTH_ENV, HEIGHT), 5)
             pygame.display.update()
             for event in pygame.event.get():
                 pass
@@ -239,9 +252,10 @@ if __name__ == "__main__":
     env= Environnement()
     ga= None
     run= True
-    main_agent= Group(Agent(velocity= 10, rotation_angle= 45, position= ((WIDTH/2) - (PLAYER_WIDTH / 2), HEIGHT - (PLAYER_HEIGHT/1.7))))
+    main_agent= Group(Agent(velocity= 10, rotation_angle= 45, position= ((WIDTH_ENV/2) - (PLAYER_WIDTH / 2), HEIGHT - (PLAYER_HEIGHT/1.7))))
     #WINDOW.fill((51,51,51))
     WINDOW.fill((255,255,255))
+    pygame.draw.line(WINDOW, (0,0,0), (WIDTH_ENV, 0), (WIDTH_ENV, HEIGHT), 5)
     main_agent.draw(WINDOW)
     STATIC_SPRITES.draw(WINDOW)
     env.menu.draw_menu()
@@ -258,10 +272,11 @@ if __name__ == "__main__":
             if ga is None:
                 #ga= GeneticAlgorithm(agents= main_agent, evaluate= env.evaluate_agent)
                 ae_agents= [Agent(velocity= 10, rotation_angle= 45, 
-                                position= ((WIDTH/2) - (PLAYER_WIDTH / 2), HEIGHT - (PLAYER_HEIGHT/1.7)),
+                                position= ((WIDTH_ENV/2) - (PLAYER_WIDTH / 2), HEIGHT - (PLAYER_HEIGHT/1.7)),
                                 skin= "Software_Game_Assets/car1.png") for i in range(int(env.menu.pop_buffer))]
                 ga= GeneticAlgorithm(agents= ae_agents, evaluate= env.multi_eval_agents, isThreadEvaluation= True)
                 ga.set_max_nfe(int(env.menu.nfe_buffer))
+                ga.begin_menu_connection(env.menu)
             #env.evaluate_agent(main_agent)
             isPrinted= False
             best_strat, fitness_score= ga.start_optimization()
@@ -292,7 +307,7 @@ if __name__ == "__main__":
                         elif env.menu.experiment_pb_interaction(pygame.mouse.get_pos()) == True:
                             if ga is not None and ga.isFinished == True:
                                 ae_agents= [Agent(velocity= 10, rotation_angle= 45, 
-                                                position= ((WIDTH/2) - (PLAYER_WIDTH / 2), HEIGHT - (PLAYER_HEIGHT/1.7)),
+                                                position= ((WIDTH_ENV/2) - (PLAYER_WIDTH / 2), HEIGHT - (PLAYER_HEIGHT/1.7)),
                                                 skin= "Software_Game_Assets/car1.png") for i in range(int(env.menu.pop_buffer))]
                                 ga= GeneticAlgorithm(agents= ae_agents, evaluate= env.multi_eval_agents, isThreadEvaluation= True)
                                 ga.set_max_nfe(env.menu.nfe_buffer)
@@ -300,7 +315,8 @@ if __name__ == "__main__":
                             canWritePop= False
                             canWriteNfe= False
                         else:
-                            env.build_wall(isLeft= True, pos= pygame.mouse.get_pos())   #Dans le Tuple on a (Colonne, Ligne)
+                            if pygame.mouse.get_pos()[0] < WIDTH_ENV:
+                                env.build_wall(isLeft= True, pos= pygame.mouse.get_pos())
                     else:
                         canWriteNfe= False
                         canWritePop= False
@@ -310,7 +326,8 @@ if __name__ == "__main__":
                     collide_robot_pb= env.menu.robot_pb_interaction(pygame.mouse.get_pos())
                     collide_experiment_pb= env.menu.experiment_pb_interaction(pygame.mouse.get_pos()) 
                     if collide_pop_entry == False and collide_nfe_entry == False and collide_robot_pb == False and collide_experiment_pb == False:
-                        env.build_wall(isLeft= False, pos= pygame.mouse.get_pos())  #Dans le Tuple on a (Colonne, Ligne)
+                        if pygame.mouse.get_pos()[0] < WIDTH_ENV:
+                            env.build_wall(isLeft= False, pos= pygame.mouse.get_pos())  #Dans le Tuple on a (Colonne, Ligne)
 
             elif event.type == pygame.KEYDOWN:
                 if canWritePop == True:

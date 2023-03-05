@@ -3,7 +3,7 @@ import random
 import numpy as np
 from PIL import Image
 from threading import Thread
-
+from MenuWidget import MenuWidget
 from Agent import Agent
 
 # --> Genetic Algorithm <-- #
@@ -29,6 +29,10 @@ class GeneticAlgorithm():
 
     def set_max_nfe(self, max_nfe):
         self.max_nfe= max_nfe
+    
+    def begin_menu_connection(self, menu):
+        self.menu= menu
+        self.menu.set_init_fitness(self.fitness)
 
     def selection(self, t=2):
         #Implémenter le Tournament selection
@@ -91,6 +95,7 @@ class GeneticAlgorithm():
         new_fitness= np.concatenate((new_fitness, fitness_offspring[:pop_size-len(new_fitness)]), axis= None)
         self.population= np.array(new_generation)
         self.agents= [new_agent for new_agent in self.distribute_strategies(self.population)]
+        self.menu.set_new_fitness(new_fitness)
         self.fitness= np.array(new_fitness)
         #Remplir le reste population avec les individus de la nouvelle population
 
@@ -108,6 +113,7 @@ class GeneticAlgorithm():
             num_gen += 1
         best_index= np.argmax(self.fitness)
         self.isFinished= True
+        self.menu.show_new_agents(isOptiAfter= False)
         return self.population[best_index], self.fitness[best_index]
     
     def distribute_strategies(self, strategies):
