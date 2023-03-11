@@ -8,15 +8,11 @@ from pygame.sprite import *
 from Agent import Agent
 from EvolutionaryAlgorithms import GeneticAlgorithm, DifferentialEvolution, GARatingThread
 from MenuWidget import MenuWidget
+from MCTreeSearch import *
 import paho.mqtt.client as mqtt
 
 PURPLE= (137, 0, 255)
 PLAYER_CAR= pygame.image.load("Software_Game_Assets\Player_car_final.png")
-STATIC_SPRITES= Group()
-FINISH_LINE= Sprite(STATIC_SPRITES)
-FINISH_LINE.image= pygame.image.load("Software_Game_Assets\Finish_line.png")
-FINISH_LINE.rect= FINISH_LINE.image.get_rect()
-FINISH_LINE.rect.topleft= (400, 0)
 player_img= Image.open("Software_Game_Assets\Player_car_final.png")
 PLAYER_WIDTH, PLAYER_HEIGHT= player_img.size
 HEIGHT= 900
@@ -42,6 +38,12 @@ class Environnement:
         self.stop_eval= False
         self.menu= MenuWidget(WINDOW)
         self.isAlive= False
+        self.STATIC_SPRITES= Group()
+        self.FINISH_LINE= Sprite(self.STATIC_SPRITES)
+        self.FINISH_LINE.image= pygame.image.load("Software_Game_Assets\Finish_line.png")
+        self.FINISH_LINE.rect= self.FINISH_LINE.image.get_rect()
+        self.FINISH_LINE.rect.topleft= (400, 0)
+        self.key_policy= ""
 
     def euclidian_distance(self, coord_o, coord_f):
         return math.sqrt(abs(coord_o[0]-coord_f[0]) + abs(coord_o[1]-coord_f[1]))
@@ -104,7 +106,7 @@ class Environnement:
                     wall.image= pygame.image.load("Software_Game_Assets\wall.png")
                     wall.rect= wall.image.get_rect()
                     wall.rect.center= position
-                    STATIC_SPRITES.add(wall)
+                    self.STATIC_SPRITES.add(wall)
             self.prev_left_position= pos
         elif isLeft == False:
             if self.prev_right_position != None:
@@ -114,9 +116,9 @@ class Environnement:
                     wall.image= pygame.image.load("Software_Game_Assets\wall.png")
                     wall.rect= wall.image.get_rect()
                     wall.rect.center= position
-                    STATIC_SPRITES.add(wall)
+                    self.STATIC_SPRITES.add(wall)
             self.prev_right_position= pos
-        STATIC_SPRITES.draw(WINDOW)
+        self.STATIC_SPRITES.draw(WINDOW)
         self.menu.draw_menu()
         pygame.display.update()
         for event in pygame.event.get():
@@ -124,6 +126,7 @@ class Environnement:
         print("Left wall: ", self.num_lwall)
         print("Right wall: ", self.num_rwall)
 
+    #-> FONCTION MARCHANT AVEC LE GA
     def multi_eval_agents(self, agents):
         agents_group= Group([agent for agent in agents])
         stop_eval_array= [False for i in range(len(agents))]
@@ -133,7 +136,7 @@ class Environnement:
         WINDOW.fill((255,255,255))
         pygame.draw.line(WINDOW, (0,0,0), (WIDTH_ENV, 0), (WIDTH_ENV, HEIGHT), 5)
         agents_group.draw(WINDOW)
-        STATIC_SPRITES.draw(WINDOW)
+        self.STATIC_SPRITES.draw(WINDOW)
         self.menu.draw_menu()
         self.menu.show_init_agents()
         self.menu.show_new_agents()
@@ -142,13 +145,13 @@ class Environnement:
             for j, agent in enumerate(agents):
                 if stop_eval_array[j] == False:
                     action= agent.select_action(agent.strategy[i])
-                    collided_sprites= pygame.sprite.spritecollide(agent, STATIC_SPRITES, False)
+                    collided_sprites= pygame.sprite.spritecollide(agent, self.STATIC_SPRITES, False)
                     if (agent.rect.top > 900 or agent.rect.bottom > 900) or (agent.surf.top > 900 or agent.surf.bottom > 900):
                         fitness[j]= -500
-                    elif len(collided_sprites) != 0 and FINISH_LINE not in collided_sprites:
+                    elif len(collided_sprites) != 0 and self.FINISH_LINE not in collided_sprites:
                         fitness[j]-= 50
                         stop_eval_array[j]= True
-                    elif FINISH_LINE in collided_sprites:
+                    elif self.FINISH_LINE in collided_sprites:
                         fitness[j]+= 2000
                         stop_eval_array[j]= True
                     if fitness[j] <= -500:
@@ -173,7 +176,7 @@ class Environnement:
                 #WINDOW.fill((51,51,51))
                 WINDOW.fill((255,255,255))
                 pygame.draw.line(WINDOW, (0,0,0), (WIDTH_ENV, 0), (WIDTH_ENV, HEIGHT), 5)
-                STATIC_SPRITES.draw(WINDOW)
+                self.STATIC_SPRITES.draw(WINDOW)
                 agents_group.draw(WINDOW)
                 self.menu.draw_menu()
                 self.menu.show_init_agents()
@@ -184,6 +187,7 @@ class Environnement:
         print("Fitness évaluées= ", fitness)
         return fitness
 
+    #-> FONCTION MARCHANT AVEC LE GA
     def evaluate_agent(self, agent):
         agent_group= Group([agent])
         self.clock.tick(60)
@@ -192,19 +196,19 @@ class Environnement:
         WINDOW.fill((255,255,255))
         pygame.draw.line(WINDOW, (0,0,0), (WIDTH_ENV, 0), (WIDTH_ENV, HEIGHT), 5)
         agent_group.draw(WINDOW)
-        STATIC_SPRITES.draw(WINDOW)
+        self.STATIC_SPRITES.draw(WINDOW)
         self.menu.draw_menu()
         self.menu.show_init_agents()
         self.menu.show_new_agents()
         for i in range(0, len(agent.strategy)):
             action= agent.select_action(agent.strategy[i])
-            collided_sprites= pygame.sprite.spritecollide(agent, STATIC_SPRITES, False)
+            collided_sprites= pygame.sprite.spritecollide(agent, self.STATIC_SPRITES, False)
             if (agent.rect.top > 900 or agent.rect.bottom > 900) or (agent.surf.top > 900 or agent.surf.bottom > 900):
                 fitness= -500
-            elif len(collided_sprites) != 0 and FINISH_LINE not in collided_sprites:
+            elif len(collided_sprites) != 0 and self.FINISH_LINE not in collided_sprites:
                 fitness-= 50
                 self.stop_eval= True
-            elif FINISH_LINE in collided_sprites:
+            elif self.FINISH_LINE in collided_sprites:
                 fitness+= 2000
                 self.stop_eval= True
             if fitness <= -500:
@@ -227,7 +231,7 @@ class Environnement:
             #WINDOW.fill((51,51,51))
             WINDOW.fill((255,255,255))
             agent_group.draw(WINDOW)
-            STATIC_SPRITES.draw(WINDOW)
+            self.STATIC_SPRITES.draw(WINDOW)
             self.menu.draw_menu()
             self.menu.show_init_agents()
             self.menu.show_new_agents()
@@ -243,6 +247,26 @@ class Environnement:
             mqtt_message+= str(int(action))
         self.mqtt_client.publish("AI_RACING_Robot/Best_Strategy", mqtt_message)
         time.sleep(1)
+    
+    def send_key_policy(self, key_policy):
+        mqtt_message=""
+        for action in best_strat:
+            mqtt_message= key_policy
+        self.mqtt_client.publish("AI_RACING_Robot/Best_Strategy", mqtt_message)
+        time.sleep(1)
+
+    def show_update(self, agent, position, angle):
+        agent.set_mcts_state(position, angle)
+        group_agent= Group([agent])
+        WINDOW.fill((255,255,255))
+        group_agent.draw(WINDOW)
+        self.STATIC_SPRITES.draw(WINDOW)
+        self.menu.draw_mcts_menu()
+        pygame.draw.line(WINDOW, (0,0,0), (WIDTH_ENV, 0), (WIDTH_ENV, HEIGHT), 5)
+        pygame.display.update()
+
+        for event in pygame.event.get():
+            pass
 
 
 if __name__ == "__main__":
@@ -252,24 +276,30 @@ if __name__ == "__main__":
     env= Environnement()
     ga= None
     run= True
-    main_agent= Group(Agent(velocity= 10, rotation_angle= 45, position= ((WIDTH_ENV/2) - (PLAYER_WIDTH / 2), HEIGHT - (PLAYER_HEIGHT/1.7))))
+    main_agent= Agent(velocity= 10, rotation_angle= 45, position= ((WIDTH_ENV/2) - (PLAYER_WIDTH / 2), HEIGHT - (PLAYER_HEIGHT/1.7)))
     #WINDOW.fill((51,51,51))
     WINDOW.fill((255,255,255))
     pygame.draw.line(WINDOW, (0,0,0), (WIDTH_ENV, 0), (WIDTH_ENV, HEIGHT), 5)
     main_agent.draw(WINDOW)
-    STATIC_SPRITES.draw(WINDOW)
+    env.STATIC_SPRITES.draw(WINDOW)
     env.menu.draw_menu()
     best_strat= []
     fitness_score= 0
     isPrinted= False
     ga= None
+    mcts_algorithm= None
     pygame.display.update()
     while run:
         env.clock.tick(3)
-        STATIC_SPRITES.draw(WINDOW)
+        env.STATIC_SPRITES.draw(WINDOW)
         env.menu.draw_menu()
         if env.isAlive:
-            if ga is None:
+            if mcts_algorithm is None:
+                mcts_algorithm= ClassicMCTreeSearch(env= env, agent= main_agent)
+                env.menu.attach_mcts_algo(mcts_algorithm)
+                env.key_policy= mcts_algorithm.start_optimization()
+                env.isAlive= False
+            """if ga is None:
                 #ga= GeneticAlgorithm(agents= main_agent, evaluate= env.evaluate_agent)
                 ae_agents= [Agent(velocity= 10, rotation_angle= 45, 
                                 position= ((WIDTH_ENV/2) - (PLAYER_WIDTH / 2), HEIGHT - (PLAYER_HEIGHT/1.7)),
@@ -279,13 +309,13 @@ if __name__ == "__main__":
                 ga.begin_menu_connection(env.menu)
             #env.evaluate_agent(main_agent)
             isPrinted= False
-            best_strat, fitness_score= ga.start_optimization()
-        if ga is not None:
+            best_strat, fitness_score= ga.start_optimization()"""
+        """if ga is not None:
             if ga.isFinished and isPrinted == False:
                 isPrinted= True
                 env.isAlive= False
                 print("Best_Strat=", best_strat)
-                print("Fitness_Score=", fitness_score)
+                print("Fitness_Score=", fitness_score)"""
         pygame.display.update()
 
         for event in pygame.event.get():
@@ -302,15 +332,16 @@ if __name__ == "__main__":
                             canWriteNfe= True
                             canWritePop= False
                         elif env.menu.robot_pb_interaction(pygame.mouse.get_pos()) == True:
-                                if ga is not None and ga.isFinished == True:
-                                    env.send_optimum_strategy(best_strat)
+                                """if ga is not None and ga.isFinished == True:
+                                    env.send_optimum_strategy(best_strat)"""
+                                env.send_key_policy(key_policy= env.key_policy)
                         elif env.menu.experiment_pb_interaction(pygame.mouse.get_pos()) == True:
-                            if ga is not None and ga.isFinished == True:
+                            """if ga is not None and ga.isFinished == True:
                                 ae_agents= [Agent(velocity= 10, rotation_angle= 45, 
                                                 position= ((WIDTH_ENV/2) - (PLAYER_WIDTH / 2), HEIGHT - (PLAYER_HEIGHT/1.7)),
                                                 skin= "Software_Game_Assets/car1.png") for i in range(int(env.menu.pop_buffer))]
                                 ga= GeneticAlgorithm(agents= ae_agents, evaluate= env.multi_eval_agents, isThreadEvaluation= True)
-                                ga.set_max_nfe(env.menu.nfe_buffer)
+                                ga.set_max_nfe(env.menu.nfe_buffer)"""
                             env.isAlive= True
                             canWritePop= False
                             canWriteNfe= False

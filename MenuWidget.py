@@ -3,6 +3,7 @@ from pygame.sprite import *
 from PIL import Image
 import numpy as np
 from Agent import Agent
+from MCTreeSearch import *
 
 rob_pb= Image.open("Software_Game_Assets/sendRobot_pushButton.png")
 exp_pb= Image.open("Software_Game_Assets/sendRobot_pushButton.png")
@@ -24,6 +25,8 @@ opti_img= pygame.transform.scale(opti_img, (int(opti_width/25), int(opti_height/
 opti_img= pygame.transform.rotate(opti_img, 180)
 pygame.font.init()
 SCORE_FONT= pygame.font.Font("Software_Game_Assets/PressStart2P-vaV7.ttf", 7)
+TREE_WIDTH= 1480 - 820
+WIDTH_ENV= 820
 
 
 class MenuWidget:
@@ -34,6 +37,7 @@ class MenuWidget:
         self.init_fit_dict= dict()
         self.new_fit_dict= []
         self.menu_sprites= Group()
+        self.mcts_menu_sprites= Group()
         self.init_agents= Group()
         self.new_agents= Group()
         self.opti_sprites= Group()
@@ -47,6 +51,7 @@ class MenuWidget:
         self.nfe_entry.image= pygame.image.load("Software_Game_Assets/text_entry.png")
         self.window= window
         self.menu_sprites.add(self.experiment_pb, self.robot_pb, self.pop_entry, self.nfe_entry)
+        self.mcts_menu_sprites.add(self.experiment_pb, self.robot_pb)
         width_window= self.window.get_width()
         height_window= self.window.get_height()
         self.robot_pb.rect= self.robot_pb.image.get_rect()
@@ -65,6 +70,9 @@ class MenuWidget:
         self.nfe_buffer= ""
         self.last_height= 0
 
+    def attach_mcts_algo(self, mcts_algo):
+        self.mcts_algo= mcts_algo
+
     def draw_menu(self):
         self.menu_sprites.draw(self.window)
         pop_buffer= self.font.render(self.pop_buffer, True, "black")
@@ -77,7 +85,18 @@ class MenuWidget:
         self.window.blit(pop_title[1], (self.pop_entry_rect.left, self.pop_entry_rect.top-12))
         self.window.blit(nfe_title[0], (self.nfe_entry_rect.left+10, self.nfe_entry_rect.top-24))
         self.window.blit(nfe_title[1], (self.nfe_entry_rect.left+10, self.nfe_entry_rect.top-12))
+    
+    def draw_mcts_menu(self):
+        self.mcts_menu_sprites.draw(self.window)
+        self.show_tree()
+        """pop_buffer= self.font.render(self.pop_buffer, True, "black")
+        self.window.blit(pop_buffer, (self.pop_entry_rect.left+10, self.pop_entry_rect.centery-5))
+        nfe_buffer= self.font.render(self.nfe_buffer, True, "black")
+        self.window.blit(nfe_buffer, (self.nfe_entry_rect.left+10, self.nfe_entry_rect.centery-5))
+        pop_title= [self.font.render("Population", True, "black"), self.font.render("Size", True, "black")]
+        nfe_title= [self.font.render("Max", True, "black"), self.font.render("NFE", True, "black")]"""
 
+        
     def set_init_fitness(self, fitness):
         j= 0
         reset_x_loc= False
@@ -165,7 +184,11 @@ class MenuWidget:
                 self.opti_sprites.draw(self.window)
             for i in range(len(self.new_fit_dict)):
                 self.window.blit(self.new_fit_dict[i][0], (self.new_fit_dict[i][1], self.new_fit_dict[i][2]))
-            
+
+    def show_tree(self):
+        for state in self.mcts_algo.ui_states:
+            state.draw_state(self.window)
+
 
     def robot_pb_interaction(self, mouse_position):
         if self.robot_pb_rect.collidepoint(mouse_position):
@@ -177,7 +200,8 @@ class MenuWidget:
     def experiment_pb_interaction(self, mouse_position):
         if self.experiment_pb_rect.collidepoint(mouse_position):
             print("Experiment Launched")
-            self.width_opti_img= np.zeros(int(self.pop_buffer))
+            if self.pop_buffer != "":
+                self.width_opti_img= np.zeros(int(self.pop_buffer))
             return True
         else:
             return False
