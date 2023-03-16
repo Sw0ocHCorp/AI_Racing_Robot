@@ -51,7 +51,7 @@ class Agent(pygame.sprite.Sprite):
         else:
             self.simulated_angle= angle
     
-    def rotate_agent_img(self, angle= 45, ):
+    def rotate_agent_img(self, angle= 45):
         self.image= pygame.transform.rotate(self.SKIN, angle)
         self.rect= self.image.get_rect(center= self.position)
         self.hitbox_surface = pygame.transform.rotate(self.SURFACE, angle)

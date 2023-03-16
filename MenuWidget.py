@@ -88,7 +88,7 @@ class MenuWidget:
     
     def draw_mcts_menu(self):
         self.mcts_menu_sprites.draw(self.window)
-        self.show_tree()
+        #self.show_tree()
         """pop_buffer= self.font.render(self.pop_buffer, True, "black")
         self.window.blit(pop_buffer, (self.pop_entry_rect.left+10, self.pop_entry_rect.centery-5))
         nfe_buffer= self.font.render(self.nfe_buffer, True, "black")

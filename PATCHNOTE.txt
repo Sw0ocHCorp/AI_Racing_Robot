@@ -155,3 +155,35 @@ PROJET_AI_ROBOT_RACING_V1.2:
 -> Adapter les valeur de récompense pour faire converger la population de l'algorithme (OPTIONNEL)
 -> Dev côté NodeMCU Arduino
 -----------------------------------------------------------------------------------
+
+PROJET_AI_ROBOT_RACING_V1.3: 
+.Fonctionnalités présentes
+-> Création de l'Environnement(PYGAME):
+    * Possibilité de tracer le circuit sur lequel l'Agent doit Apprendre à atteindre la ligne d'arrivé le plus rapidement
+    * Utilisation du calcul de distance de Levenshtein pour placer les murs entre 2 points --> SpriteList
+
+    * L'Agent peut prendre 3 Actions: Rotation Gauche(45°), Rotation Droite(45°), Avancer
+    * Passage sur une liste de Sprite pour les Agents --> Simplifie la gestion des collisions(Murs <-> Agents)
+-> Création de l'Algorithme Génétique(Vérification de Fonctionnement à faire):
+    * Génotype= Stratégie de l'Agent => Liste de 100 chiffres entre 0 et 2(0= DROITE | 1= GAUCHE | 2= AVANCER)
+    * Evaluation "Simultanées" des Agents --> Suppression des threads pour l'évaluation des Agents car utilisation de SpriteList
+    * Algorithme Génétique fonctionnel
+-> Création d'un HUD pour configurer l'Algorithme Evolutionnaire
+    * Text Entry pour la taille de la population et le Max nfe
+    * Bouton pour lancer l'Algorithme Evolutionnaire
+    * Bouton pour envoyer la Stratégie Optimale de l'Agent en MQTT vers le Robot
+    * Affichage d'un Historique des performances des Agents au fur et à mesure de l'exécution de l'Algorithme Génétique
+-> Implémentation de la Communication MQTT avec le Robot ==> Côté Software
+    * L'appui sur le Bouton "Send to Robot" permet d'envoyer la Stratégie Optimale de l'Agent en MQTT vers le Robot
+-> Création de l'Algorithme MCTS(Alternative au GA)
+    + Conversion Récursif -> Iteratif (FIX PROBLEME LIMIT RECURSIVE LOOP)
+    + Introduction d'un coefficient d'amplification des perfs des meilleurs états 
+            (Favorise l'Exploitation | Permet de limiter l'impact des stats de wins très faibles car énormément d'états / actions possibles)
+    + Utilisation de Poids / Proba de prendre certaines actions 
+            (favorise AVANCER quand voiture dans le sens de la Ligne d'Arrivée | Simule le bon sens Humain, limite de prendre des actions absurdes via apport de connaissance)    
+
+
+.Fonctionnalités à Développer
+-> Recherche de nouvelles optimisation de l'Algorithme MCTS potentiellement plus pertinentes 
+-> Dev côté NodeMCU Arduino
+-----------------------------------------------------------------------------------

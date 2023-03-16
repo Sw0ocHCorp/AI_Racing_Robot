@@ -26,7 +26,7 @@ WINDOW= pygame.display.set_mode((WIDTH, HEIGHT))
 class Environnement:
     def __init__(self):
         self.mqtt_client= mqtt.Client(client_id= "AI_Racing_Robot")
-        self.mqtt_client.connect("test.mosquitto.org")
+        #self.mqtt_client.connect("test.mosquitto.org")
         self.right_bound= np.empty((0,2))
         self.left_bound= np.empty((0,2))
         self.clock= pygame.time.Clock()
@@ -44,6 +44,7 @@ class Environnement:
         self.FINISH_LINE.rect= self.FINISH_LINE.image.get_rect()
         self.FINISH_LINE.rect.topleft= (400, 0)
         self.key_policy= ""
+        self.clock.tick(10)
 
     def euclidian_distance(self, coord_o, coord_f):
         return math.sqrt(abs(coord_o[0]-coord_f[0]) + abs(coord_o[1]-coord_f[1]))
@@ -130,7 +131,7 @@ class Environnement:
     def multi_eval_agents(self, agents):
         agents_group= Group([agent for agent in agents])
         stop_eval_array= [False for i in range(len(agents))]
-        self.clock.tick(3)
+        #self.clock.tick(3)
         fitness= np.zeros(len(agents))
         #WINDOW.fill((51,51,51))
         WINDOW.fill((255,255,255))
@@ -190,7 +191,7 @@ class Environnement:
     #-> FONCTION MARCHANT AVEC LE GA
     def evaluate_agent(self, agent):
         agent_group= Group([agent])
-        self.clock.tick(60)
+        #self.clock.tick(60)
         fitness= 0
         #WINDOW.fill((51,51,51))
         WINDOW.fill((255,255,255))
@@ -297,7 +298,7 @@ if __name__ == "__main__":
             if mcts_algorithm is None:
                 mcts_algorithm= ClassicMCTreeSearch(env= env, agent= main_agent)
                 env.menu.attach_mcts_algo(mcts_algorithm)
-                env.key_policy= mcts_algorithm.start_optimization()
+                env.key_policy= mcts_algorithm.start_optimization(coeff_explo= 5, coeff_exploit= 50)
                 env.isAlive= False
             """if ga is None:
                 #ga= GeneticAlgorithm(agents= main_agent, evaluate= env.evaluate_agent)
