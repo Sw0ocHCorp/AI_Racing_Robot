@@ -11,17 +11,16 @@ class Agent(pygame.sprite.Sprite):
     def __init__(self, velocity, rotation_angle, skin= "Software_Game_Assets\Player_car_final.png", position= (0,0)):
         super().__init__()
         #-> Stratégie de l'Agent | Version GA
-        #self.strategy= np.random.randint(3, size= 100)
+        self.strategy= np.random.randint(3, size= 100)
         #-> Stratégie de l'Agent | Version MCTS
-        self.strategy= np.array([])
+        #self.strategy= np.array([])
         self.SKIN= pygame.image.load(skin)
         self.image= self.SKIN
         self.velocity= velocity
         self.rotation_angle= rotation_angle
-        self.img= Image.open(skin)
-        self.width, self.height= self.img.size
         self.angle= 0
         self.simulated_angle= 0
+        self.INIT_POSITION= position
         self.position= position
         self.rect= self.image.get_rect()   
         self.rect.center= self.position
@@ -66,6 +65,7 @@ class Agent(pygame.sprite.Sprite):
         #if isForward:
         position[0] -= self.velocity * math.sin(radian_angle)
         position[1] -= self.velocity * math.cos(radian_angle)
+        
         """else:
             position[0] += self.velocity * math.sin(radian_angle)
             self.hitbox.x += self.velocity * math.sin(radian_angle)
@@ -82,8 +82,16 @@ class Agent(pygame.sprite.Sprite):
     def select_action(self, action):
         if action == DROITE:
             self.rotate(False)
+            if self.angle> 90 and self.angle< 270:
+                self.movement(isForward= False)
+            else:
+                self.movement(isForward= True)
         elif action == GAUCHE:
             self.rotate(True)
+            if self.angle> 90 and self.angle< 270:
+                self.movement(isForward= False)
+            else:
+                self.movement(isForward= True)
         elif action == AVANT:
             if self.angle> 90 and self.angle< 270:
                 self.movement(isForward= False)
@@ -107,8 +115,23 @@ class Agent(pygame.sprite.Sprite):
                 1: {"position":left_child, "agent_angle":left_angle}, 
                 2: {"position":forward_child, "agent_angle":forward_angle}}
 
-    def set_mcts_state(self, position, angle):
+    def set_state(self, position, angle):
         self.position= position
+        self.rect.center= position
+        self.surf.x, self.surf.y= self.rect.x, self.rect.y
         self.angle= angle
         self.rotate_agent_img(self.angle)
 
+    def reset_state(self):
+        self.angle= 0
+        self.image= self.SKIN
+        self.rect= self.image.get_rect()   
+        self.position= self.INIT_POSITION
+        self.rect.center= self.position
+        hitbox_color = (255, 0, 0)
+        self.SURFACE= pygame.Surface(self.rect.size, pygame.SRCALPHA)
+        self.hitbox_surface = self.SURFACE
+        self.hitbox_surface.fill(hitbox_color)
+        self.hitbox_surface.set_alpha(50)
+        self.surf = self.hitbox_surface.get_rect()
+        self.surf.center= self.rect.center

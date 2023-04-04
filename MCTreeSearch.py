@@ -24,6 +24,7 @@ class ClassicMCTreeSearch():
         self.isFinished= False
         self.finishing_state= None
         self.ui_states= []
+        self.nb_cycle= 0
 
     def euclidian_distance(self, coord_o, coord_f):
         return sqrt(abs(coord_o[0]-coord_f[0]) + abs(coord_o[1]-coord_f[1]))
@@ -32,7 +33,7 @@ class ClassicMCTreeSearch():
         if state.visits == 0:
             state.ucb_value= 20
         else:
-            exploit_part= coeff_exploit*(state.wins / state.visits)
+            exploit_part= (state.wins / state.visits)
             explo_part= coeff_explo*np.sqrt(np.log(state.parent.visits) / state.visits)
             state.ucb_value= exploit_part + explo_part
         return state.ucb_value
@@ -87,6 +88,7 @@ class ClassicMCTreeSearch():
     
     #-> Selection= On test le noeud enfant / etat suivant le plus prometteur (meilleure valeur UCB)
     def single_selection(self, actual_state, coeff_explo= 2, coeff_exploit= 2): 
+        self.env.clock.tick(20)
         max_ucb= -100000
         best_next_state= actual_state
         for next_state in actual_state.childrens:
@@ -98,10 +100,11 @@ class ClassicMCTreeSearch():
                 else:
                     max_ucb= self.get_ucb_value(next_state, coeff_explo= coeff_explo, coeff_exploit= coeff_exploit)
                     best_next_state= next_state
-        self.env.show_update(self.agent, best_next_state.position, best_next_state.agent_angle)
+        self.env.show_update(self.agent, best_next_state.position, best_next_state.agent_angle, 20)
         return best_next_state
     
-    def selection(self, actual_state, coeff_explo= 2, coeff_exploit= 2):         
+    def selection(self, actual_state, coeff_explo= 2, coeff_exploit= 2):  
+        self.env.clock.tick(20)       
         best_next_state= actual_state
         while len(best_next_state.childrens) > 0:
             max_ucb= -100000
@@ -114,11 +117,12 @@ class ClassicMCTreeSearch():
                     else:
                         max_ucb= self.get_ucb_value(next_state, coeff_explo= coeff_explo, coeff_exploit= coeff_exploit)
                         best_next_state= next_state
-            self.env.show_update(self.agent, best_next_state.position, best_next_state.agent_angle)
+            self.env.show_update(self.agent, best_next_state.position, best_next_state.agent_angle, 20)
         return best_next_state
     
     #-> Expansion= On récupère les noeuds enfants / etats suivants du noeud de départ, jusqu'au dernier connu
     def expansion(self, last_known_state, coeff_explo= 2, coeff_exploit= 2):  
+        self.env.clock.tick(20)
         last_known_state.childrens, _= self.get_next_states(last_known_state)
         for child in last_known_state.childrens:
             ui_child= UI_State(state= child, mcts= self)
@@ -134,6 +138,10 @@ class ClassicMCTreeSearch():
 
     #-> Simulation= On simule un jeu jusqu'à la fin en prenant des actions randoms pour récupérer le score final
     def simulation(self, target_state):   
+        if self.nb_cycle % 10 == 0:
+            self.env.clock.tick(45)
+        else:
+            self.env.clock.tick(200)
         selected_state= target_state
         reward= 0
         isFinished= False
@@ -164,7 +172,11 @@ class ClassicMCTreeSearch():
                 isFinished= True
                 if selected_state.isWinningState:
                     reward= 1
-            self.env.show_update(self.agent, selected_state.position, selected_state.agent_angle)
+            if self.nb_cycle % 10 == 0:
+                print("OK")
+                self.env.show_update(self.agent, selected_state.position, selected_state.agent_angle, 45)
+            else:
+                self.env.show_update(self.agent, selected_state.position, selected_state.agent_angle, 200)
         return reward
     
     #-> Retropropagation= On remonte le score final de la simulation jusqu'au noeud de départ
@@ -186,7 +198,6 @@ class ClassicMCTreeSearch():
         target_state.wins += reward
         target_state.visits += 1
         cpt_generation += 1
-        print("Dig Generation#", cpt_generation)
         self.env.show_update(self.agent, target_state.position, target_state.agent_angle)
         if reward == 1:
             print("--> " + str(target_state.wins) +" WINS / " + str(target_state.visits) + " VISITS")
@@ -198,7 +209,9 @@ class ClassicMCTreeSearch():
         key_policy= ""
         while state.parent != None:
             key_policy= str(state.prev_action) + key_policy
+            self.env.show_update(self.agent, state.position, state.agent_angle, 10)
             state= state.parent
+        self.env.show_update(self.agent, state.position, state.agent_angle, 10)
         return key_policy
     
     def start_optimization(self, coeff_explo= 10, coeff_exploit= 10):
@@ -210,6 +223,7 @@ class ClassicMCTreeSearch():
             next_state= self.expansion(last_known_state, coeff_explo= coeff_explo, coeff_exploit= coeff_exploit)
             reward= self.simulation(next_state)
             initial_state, coeff_explo, coeff_exploit= self.backpropagation(next_state, reward, coeff_explo, coeff_exploit= coeff_exploit)
+            self.nb_cycle += 1
         key_policy= self.get_key_policy(self.finishing_state)
         print("Key_Policy Trouvée: ", key_policy)
         return key_policy

@@ -72,6 +72,9 @@ class MenuWidget:
 
     def attach_mcts_algo(self, mcts_algo):
         self.mcts_algo= mcts_algo
+    
+    def attach_ga(self, ga):
+        self.ga= ga
 
     def draw_menu(self):
         self.menu_sprites.draw(self.window)
@@ -100,7 +103,7 @@ class MenuWidget:
     def set_init_fitness(self, fitness):
         j= 0
         reset_x_loc= False
-        sorted_fitness= sorted(fitness, reverse= True)
+        sorted_fitness= sorted(fitness)
         for i, f in enumerate(sorted_fitness):
             if i == 0:
                 best_agent= Sprite()
