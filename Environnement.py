@@ -11,6 +11,7 @@ from MenuWidget import MenuWidget
 from MCTreeSearch import *
 import paho.mqtt.client as mqtt
 from AStarPathFinding import *
+from ReinForcementLearning import *
 
 PURPLE= (137, 0, 255)
 PLAYER_CAR= pygame.image.load("Software_Game_Assets\Player_car_final.png")
@@ -297,6 +298,22 @@ class Environnement:
         for event in pygame.event.get():
             self.clock.tick(framerate)
             pass
+    
+    def show_agents_updates(self, agents, positions, angles, framerate= 30):
+        self.clock.tick(framerate)
+        for i in range(0, len(agents)):
+            agents[i].set_state(positions[i], angles[i])
+        group_agents= Group([agents])
+        WINDOW.fill((255,255,255))
+        group_agents.draw(WINDOW)
+        self.STATIC_SPRITES.draw(WINDOW)
+        pygame.draw.line(WINDOW, (0,0,0), (WIDTH_ENV, 0), (WIDTH_ENV, HEIGHT), 5)
+        pygame.display.update()
+
+        for event in pygame.event.get():
+            self.clock.tick(framerate)
+            pass
+        pass
 
 
 if __name__ == "__main__":
@@ -321,6 +338,7 @@ if __name__ == "__main__":
     mcts_algorithm= None
     astar_algorithm= None
     best_indiv= None
+    qlr_algorithm= None
     pygame.display.update()
     while run:
         env.clock.tick(10)
@@ -347,9 +365,12 @@ if __name__ == "__main__":
                                 skin= "Software_Game_Assets/car1.png") for i in range(int(env.menu.pop_buffer))]
                 nsga2= NSGAII(agents= ae_agents, n_obj_evaluate= env.bi_objective_eval_agents, environment= env, menu= env.menu, max_nfe= int(env.menu.nfe_buffer))
             best_indiv= nsga2.start_optimization()"""
-            if astar_algorithm is None:
+            """if astar_algorithm is None:
                 astar_algorithm= AStarPathFinding(environment= env, agent= main_agent)
-                best_strat= astar_algorithm.pathfinding(astar_algorithm.agent)
+                best_strat= astar_algorithm.pathfinding(astar_algorithm.agent)"""
+            if qlr_algorithm is None:
+                qlr_algorithm= QLearningAlgorithm(environment= env, nb_agents= 2)
+                best_strategies= qlr_algorithm.reinforced_pathfinding()
                 env.isAlive= False
             #env.evaluate_agent(main_agent)
             isPrinted= False

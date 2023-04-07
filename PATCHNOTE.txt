@@ -3,6 +3,7 @@ PROJET_AI_ROBOT_RACING_V0:
 -> Création de l'Environnement(PyGame):
     * Possibilité de tracer le circuit sur lequel l'Agent doit Apprendre à atteindre la ligne d'arrivé le plus rapidement
     * Utilisation du calcul de distance de Levenshtein pour détection des limite du circuit par l'Agent(Simulation du capteur ultrason HC-SR04 IRL)
+
 -> Création de l'Agent:
     * L'Agent peut prendre 3 Actions: Rotation Gauche(45°), Rotation Droite(45°), Avancer
 
@@ -20,12 +21,15 @@ PROJET_AI_ROBOT_RACING_V0.1:
 -> Création de l'Environnement(PyGame):
     * Possibilité de tracer le circuit sur lequel l'Agent doit Apprendre à atteindre la ligne d'arrivé le plus rapidement
     * Utilisation du calcul de distance de Levenshtein pour détection des limite du circuit par l'Agent(Simulation du capteur ultrason HC-SR04 IRL)
+
 -> Création de l'Agent:
     * L'Agent peut prendre 3 Actions: Rotation Gauche(45°), Rotation Droite(45°), Avancer
     + Fix problème de HitBox de l'Agent lors de la Rotation
     + Fix Problème de calcul de la ligne entre 2 points(quand très peu d'écart axe X et beaucoup d'écart axe Y)
+
 +-> Création de l'Algorithme Génétique(Vérification de Fonctionnement à faire):
     + Génotype= Stratégie de l'Agent => Liste de 100 chiffres entre 0 et 2(0= DROITE | 1= GAUCHE | 2= AVANCER)
+
 
 .Fonctionnalités à Développer
 -> Vérifier le Fonctionnement de l'Algorithme Génétique
@@ -39,14 +43,17 @@ PROJET_AI_ROBOT_RACING_V0.2:
 -> Création de l'Environnement(PyGame):
     * Possibilité de tracer le circuit sur lequel l'Agent doit Apprendre à atteindre la ligne d'arrivé le plus rapidement
     * Utilisation du calcul de distance de Levenshtein pour détection des limite du circuit par l'Agent(Simulation du capteur ultrason HC-SR04 IRL)
+
 -> Création de l'Agent:
     * L'Agent peut prendre 3 Actions: Rotation Gauche(45°), Rotation Droite(45°), Avancer
     * Fix problème de HitBox de l'Agent lors de la Rotation
     * Fix Problème de calcul de la ligne entre 2 points(quand très peu d'écart axe X et beaucoup d'écart axe Y)
+
 -> Création de l'Algorithme Génétique(Vérification de Fonctionnement à faire):
     * Génotype= Stratégie de l'Agent => Liste de 100 chiffres entre 0 et 2(0= DROITE | 1= GAUCHE | 2= AVANCER)
     * Vérification du Fonctionnement de l'Algorithme Génétique
     + Intégrer un système d'évaluation parallèles des Agents(Utilisations de Threads, 1 par Agents) pour affichage de tous les Agents en même temps lors de l'exécution de la Stratégie 
+
 
 .Fonctionnalités à Développer
 -> Adapter les valeur de récompense pour faire converger la population de l'algorithme 
@@ -59,9 +66,11 @@ PROJET_AI_ROBOT_RACING_V0.3:
 -> Création de l'Environnement: ==> MIGRATION VERS PYTHON ARCADE
     * Possibilité de tracer le circuit sur lequel l'Agent doit Apprendre à atteindre la ligne d'arrivé le plus rapidement
     * Utilisation du calcul de distance de Levenshtein pour détection des collisions Circuit <--> Agent(Simulation du capteur ultrason HC-SR04 IRL)
+
 -> Création de l'Agent:
     * L'Agent peut prendre 3 Actions: Rotation Gauche(45°), Rotation Droite(45°), Avancer
     * Hitbox directement gérée par la librairie Arcade
+
 -> Création de l'Algorithme Génétique(Vérification de Fonctionnement à faire):
     * Génotype= Stratégie de l'Agent => Liste de 100 chiffres entre 0 et 2(0= DROITE | 1= GAUCHE | 2= AVANCER)
     * Vérification du Fonctionnement de l'Algorithme Génétique
@@ -81,13 +90,14 @@ PROJET_AI_ROBOT_RACING_V1:
 -> Création de l'Environnement: ==> RETOUR SUR PYGAME
     * Possibilité de tracer le circuit sur lequel l'Agent doit Apprendre à atteindre la ligne d'arrivé le plus rapidement
     + Utilisation du calcul de distance de Levenshtein pour placer les murs entre 2 points --> SpriteList
-
     * L'Agent peut prendre 3 Actions: Rotation Gauche(45°), Rotation Droite(45°), Avancer
     + Passage sur une liste de Sprite pour les Agents --> Simplifie la gestion des collisions(Murs <-> Agents)
+
 -> Création de l'Algorithme Génétique(Vérification de Fonctionnement à faire):
     * Génotype= Stratégie de l'Agent => Liste de 100 chiffres entre 0 et 2(0= DROITE | 1= GAUCHE | 2= AVANCER)
     + Evaluation "Simultanées" des Agents --> Suppression des threads pour l'évaluation des Agents car utilisation de SpriteList
     + Algorithme Génétique fonctionnel
+
 +-> Création d'un HUD pour configurer l'Algorithme Evolutionnaire
     + Text Entry pour la taille de la population et le Max nfe
     + Bouton pour lancer l'Algorithme Evolutionnaire
@@ -104,20 +114,23 @@ PROJET_AI_ROBOT_RACING_V1.1:
 -> Création de l'Environnement(PYGAME):
     * Possibilité de tracer le circuit sur lequel l'Agent doit Apprendre à atteindre la ligne d'arrivé le plus rapidement
     * Utilisation du calcul de distance de Levenshtein pour placer les murs entre 2 points --> SpriteList
-
     * L'Agent peut prendre 3 Actions: Rotation Gauche(45°), Rotation Droite(45°), Avancer
     * Passage sur une liste de Sprite pour les Agents --> Simplifie la gestion des collisions(Murs <-> Agents)
+
 -> Création de l'Algorithme Génétique(Vérification de Fonctionnement à faire):
     * Génotype= Stratégie de l'Agent => Liste de 100 chiffres entre 0 et 2(0= DROITE | 1= GAUCHE | 2= AVANCER)
     * Evaluation "Simultanées" des Agents --> Suppression des threads pour l'évaluation des Agents car utilisation de SpriteList
     * Algorithme Génétique fonctionnel
+
 -> Création d'un HUD pour configurer l'Algorithme Evolutionnaire
     * Text Entry pour la taille de la population et le Max nfe
     * Bouton pour lancer l'Algorithme Evolutionnaire
     * Bouton pour envoyer la Stratégie Optimale de l'Agent en MQTT vers le Robot
     + Affichage d'un Historique des performances des Agents au fur et à mesure de l'exécution de l'Algorithme Génétique
+
 +-> Implémentation de la Communication MQTT avec le Robot ==> Côté Software
     + L'appui sur le Bouton "Send to Robot" permet d'envoyer la Stratégie Optimale de l'Agent en MQTT vers le Robot
+
 
 .Fonctionnalités à Développer
 -> Limiter le nombre de générations affichées dans l'historique ou Ajouter une fonctionnalité de scroll pour afficher beaucoup de générations
@@ -130,21 +143,25 @@ PROJET_AI_ROBOT_RACING_V1.2:
 -> Création de l'Environnement(PYGAME):
     * Possibilité de tracer le circuit sur lequel l'Agent doit Apprendre à atteindre la ligne d'arrivé le plus rapidement
     * Utilisation du calcul de distance de Levenshtein pour placer les murs entre 2 points --> SpriteList
-
     * L'Agent peut prendre 3 Actions: Rotation Gauche(45°), Rotation Droite(45°), Avancer
     * Passage sur une liste de Sprite pour les Agents --> Simplifie la gestion des collisions(Murs <-> Agents)
+
 -> Création de l'Algorithme Génétique(Vérification de Fonctionnement à faire):
     * Génotype= Stratégie de l'Agent => Liste de 100 chiffres entre 0 et 2(0= DROITE | 1= GAUCHE | 2= AVANCER)
     * Evaluation "Simultanées" des Agents --> Suppression des threads pour l'évaluation des Agents car utilisation de SpriteList
     * Algorithme Génétique fonctionnel
+
 -> Création d'un HUD pour configurer l'Algorithme Evolutionnaire
     * Text Entry pour la taille de la population et le Max nfe
     * Bouton pour lancer l'Algorithme Evolutionnaire
     * Bouton pour envoyer la Stratégie Optimale de l'Agent en MQTT vers le Robot
     * Affichage d'un Historique des performances des Agents au fur et à mesure de l'exécution de l'Algorithme Génétique
+
 -> Implémentation de la Communication MQTT avec le Robot ==> Côté Software
     * L'appui sur le Bouton "Send to Robot" permet d'envoyer la Stratégie Optimale de l'Agent en MQTT vers le Robot
+
 +-> Création de l'Algorithme MCTS(Alternative au GA)
+
 +-> Adaptation du HUD pour le MCTS
     + Affichage de l'arbre de décision de l'Algorithme MCTS avec les Statistiques de performances de chaques noeuds
 
@@ -161,21 +178,24 @@ PROJET_AI_ROBOT_RACING_V1.3:
 -> Création de l'Environnement(PYGAME):
     * Possibilité de tracer le circuit sur lequel l'Agent doit Apprendre à atteindre la ligne d'arrivé le plus rapidement
     * Utilisation du calcul de distance de Levenshtein pour placer les murs entre 2 points --> SpriteList
-
     * L'Agent peut prendre 3 Actions: Rotation Gauche(45°), Rotation Droite(45°), Avancer
     * Passage sur une liste de Sprite pour les Agents --> Simplifie la gestion des collisions(Murs <-> Agents)
+
 -> Création de l'Algorithme Génétique(Vérification de Fonctionnement à faire):
     * Génotype= Stratégie de l'Agent => Liste de 100 chiffres entre 0 et 2(0= DROITE | 1= GAUCHE | 2= AVANCER)
     * Evaluation "Simultanées" des Agents --> Suppression des threads pour l'évaluation des Agents car utilisation de SpriteList
     * Algorithme Génétique fonctionnel
+
 -> Création d'un HUD pour configurer l'Algorithme Evolutionnaire
     * Text Entry pour la taille de la population et le Max nfe
     * Bouton pour lancer l'Algorithme Evolutionnaire
     * Bouton pour envoyer la Stratégie Optimale de l'Agent en MQTT vers le Robot
     * Affichage d'un Historique des performances des Agents au fur et à mesure de l'exécution de l'Algorithme Génétique
+
 -> Implémentation de la Communication MQTT avec le Robot ==> Côté Software
     * L'appui sur le Bouton "Send to Robot" permet d'envoyer la Stratégie Optimale de l'Agent en MQTT vers le Robot
--> Création de l'Algorithme MCTS(Alternative au GA)
+
++-> Création de l'Algorithme MCTS(Alternative au GA)
     + Conversion Récursif -> Iteratif (FIX PROBLEME LIMIT RECURSIVE LOOP)
     + Introduction d'un coefficient d'amplification des perfs des meilleurs états 
             (Favorise l'Exploitation | Permet de limiter l'impact des stats de wins très faibles car énormément d'états / actions possibles)
@@ -193,30 +213,35 @@ PROJET_AI_ROBOT_RACING_V1.4:
 -> Création de l'Environnement(PYGAME):
     * Possibilité de tracer le circuit sur lequel l'Agent doit Apprendre à atteindre la ligne d'arrivé le plus rapidement
     * Utilisation du calcul de distance de Levenshtein pour placer les murs entre 2 points --> SpriteList
-
     * L'Agent peut prendre 3 Actions: Rotation Gauche(45°), Rotation Droite(45°), Avancer
     * Passage sur une liste de Sprite pour les Agents --> Simplifie la gestion des collisions(Murs <-> Agents)
+
 -> Création de l'Algorithme Génétique(Vérification de Fonctionnement à faire):  ==> NE CONDUIT PAS A L'ARRIVEE
     * Génotype= Stratégie de l'Agent => Liste de 100 chiffres entre 0 et 2(0= DROITE | 1= GAUCHE | 2= AVANCER)
     * Evaluation "Simultanées" des Agents --> Suppression des threads pour l'évaluation des Agents car utilisation de SpriteList
     * Algorithme Génétique fonctionnel
+
 -> Création d'un HUD pour configurer l'Algorithme Evolutionnaire:
     * Text Entry pour la taille de la population et le Max nfe
     * Bouton pour lancer l'Algorithme Evolutionnaire
     * Bouton pour envoyer la Stratégie Optimale de l'Agent en MQTT vers le Robot
     * Affichage d'un Historique des performances des Agents au fur et à mesure de l'exécution de l'Algorithme Génétique
+
 -> Implémentation de la Communication MQTT avec le Robot ==> Côté Software:
     * L'appui sur le Bouton "Send to Robot" permet d'envoyer la Stratégie Optimale de l'Agent en MQTT vers le Robot
 -> Création de l'Algorithme MCTS(Alternative au GA):    ==> NE CONDUIT PAS A L'ARRIVEE
+
     * Conversion Récursif -> Iteratif (FIX PROBLEME LIMIT RECURSIVE LOOP)
     * Introduction d'un coefficient d'amplification des perfs des meilleurs états 
             (Favorise l'Exploitation | Permet de limiter l'impact des stats de wins très faibles car énormément d'états / actions possibles)
     * Utilisation de Poids / Proba de prendre certaines actions 
             (favorise AVANCER quand voiture dans le sens de la Ligne d'Arrivée | Simule le bon sens Humain, limite de prendre des actions absurdes via apport de connaissance)    
--> Création de l'Algorithme NSGAII:   ==> NE CONDUIT PAS A L'ARRIVEE
+
++-> Création de l'Algorithme NSGAII:   ==> NE CONDUIT PAS A L'ARRIVEE
     + Même Génotype que l'Algorithme Génétique
     + Même Méthode d'évaluation que l'Algorithme Génétique
--> Création de l'Algorithme A*:  ==> CONDUIT A L'ARRIVEE
+
++-> Création de l'Algorithme A*:  ==> CONDUIT A L'ARRIVEE
     + Création d'une Classe State pour modéliser les états possibles de l'Agent
     + Ajout d'une seconde Heuristique pour Trouver le chemin le plus court vers la ligne d'arrivée
         G= Distance Euclidienne entre l'état de l'Agent et le précédent
@@ -225,8 +250,66 @@ PROJET_AI_ROBOT_RACING_V1.4:
         F= G + H + 1/WD
     + Affichage des Etats enfants de l'Agent lors de la Recherche de Chemin
 
+
 .Fonctionnalités à Développer
 -> Implémentation d'un Algorithme d'Apprentissage par Renforcement pour l'Agent
+-> Ajouter des widgets de menu pour choisir l'Algorithme à utiliser
+-> Recherche de nouvelles optimisation de l'Algorithme MCTS potentiellement plus pertinentes 
+-> Dev côté NodeMCU Arduino
+-----------------------------------------------------------------------------------
+
+PROJET_AI_ROBOT_RACING_V1.5: 
+.Fonctionnalités Développées
+-> Création de l'Environnement(PYGAME):
+    * Possibilité de tracer le circuit sur lequel l'Agent doit Apprendre à atteindre la ligne d'arrivé le plus rapidement
+    * Utilisation du calcul de distance de Levenshtein pour placer les murs entre 2 points --> SpriteList
+
+    * L'Agent peut prendre 3 Actions: Rotation Gauche(45°), Rotation Droite(45°), Avancer
+    * Passage sur une liste de Sprite pour les Agents --> Simplifie la gestion des collisions(Murs <-> Agents)
+
+-> Création de l'Algorithme Génétique(Vérification de Fonctionnement à faire):  ==> NE CONDUIT PAS A L'ARRIVEE
+    * Génotype= Stratégie de l'Agent => Liste de 100 chiffres entre 0 et 2(0= DROITE | 1= GAUCHE | 2= AVANCER)
+    * Evaluation "Simultanées" des Agents --> Suppression des threads pour l'évaluation des Agents car utilisation de SpriteList
+    * Algorithme Génétique fonctionnel
+
+-> Création d'un HUD pour configurer l'Algorithme Evolutionnaire:
+    * Text Entry pour la taille de la population et le Max nfe
+    * Bouton pour lancer l'Algorithme Evolutionnaire
+    * Bouton pour envoyer la Stratégie Optimale de l'Agent en MQTT vers le Robot
+    * Affichage d'un Historique des performances des Agents au fur et à mesure de l'exécution de l'Algorithme Génétique
+
+-> Implémentation de la Communication MQTT avec le Robot ==> Côté Software:
+    * L'appui sur le Bouton "Send to Robot" permet d'envoyer la Stratégie Optimale de l'Agent en MQTT vers le Robot
+
+-> Création de l'Algorithme MCTS(Alternative au GA):    ==> NE CONDUIT PAS A L'ARRIVEE
+    * Conversion Récursif -> Iteratif (FIX PROBLEME LIMIT RECURSIVE LOOP)
+    * Introduction d'un coefficient d'amplification des perfs des meilleurs états 
+            (Favorise l'Exploitation | Permet de limiter l'impact des stats de wins très faibles car énormément d'états / actions possibles)
+    * Utilisation de Poids / Proba de prendre certaines actions 
+            (favorise AVANCER quand voiture dans le sens de la Ligne d'Arrivée | Simule le bon sens Humain, limite de prendre des actions absurdes via apport de connaissance) 
+
+-> Création de l'Algorithme NSGAII:   ==> NE CONDUIT PAS A L'ARRIVEE
+    * Même Génotype que l'Algorithme Génétique
+    * Même Méthode d'évaluation que l'Algorithme Génétique
+
+-> Création de l'Algorithme A*:  ==> CONDUIT A L'ARRIVEE
+    * Création d'une Classe State pour modéliser les états possibles de l'Agent
+    * Ajout d'une seconde Heuristique pour Trouver le chemin le plus court vers la ligne d'arrivée
+        G= Distance Euclidienne entre l'état de l'Agent et le précédent
+        H= Distance Euclidienne entre l'état de l'Agent et la Ligne d'Arrivée
+        WD= Distance Agent et Mur le plus proche
+        F= G + H + 1/WD
+    * Affichage des Etats enfants de l'Agent lors de la Recherche de Chemin
+
++-> Création de l'Algorithme de Reinforcement Learning (QLearning):     ==> CONDUIT A L'ARRIVEE 
+    + Vectorisation des calculs des Etats pour pourvoir scaler le nombre d'Agents en Simultanés
+    + Implémentation d'un Mapping du Circuit Commun à tous les Agents(pour tirer profit de l'exploration de tous les Agents et ne garder que les meilleures récompenses)
+    + Implémentation d'un Mapping propre à chacuns des Agents(Algorithme Classique) 
+
+
+.Fonctionnalités à Développer
+-> Corriger les problèmes du QLearning (attendre que CHACUNS des Agents aient terminé leurs simulations avant de mettre à jour les Valeurs d'Etats)
+-> Optimiser l'Algorithme pour qu'il réussise à atteindre la ligne d'arrivée sur des circuits plus complexes(Ex: Circuit avec des virages et / ou avec une piste moins large)
 -> Ajouter des widgets de menu pour choisir l'Algorithme à utiliser
 -> Recherche de nouvelles optimisation de l'Algorithme MCTS potentiellement plus pertinentes 
 -> Dev côté NodeMCU Arduino
