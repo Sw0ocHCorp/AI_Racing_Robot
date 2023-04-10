@@ -18,7 +18,7 @@ PLAYER_CAR= pygame.image.load("Software_Game_Assets\Player_car_final.png")
 player_img= Image.open("Software_Game_Assets\Player_car_final.png")
 PLAYER_WIDTH, PLAYER_HEIGHT= player_img.size
 HEIGHT= 900
-WIDTH= 1500
+WIDTH= 1600
 WIDTH_ENV= 800
 WINDOW= pygame.display.set_mode((WIDTH, HEIGHT))
 
@@ -47,6 +47,7 @@ class Environnement:
         self.FINISH_LINE.rect.topleft= (400, 0)
         self.key_policy= ""
         self.clock.tick(10)
+        self.feedback_sprites= Group()
 
     def euclidian_distance(self, coord_o, coord_f):
         return math.sqrt(abs(coord_o[0]-coord_f[0]) + abs(coord_o[1]-coord_f[1]))
@@ -106,22 +107,33 @@ class Environnement:
                 self.num_lwall += 1
                 for position in self.bresenham_algorithm(self.prev_left_position, pos):
                     wall= Sprite()
+                    feedback_wall= Sprite()
                     wall.image= pygame.image.load("Software_Game_Assets\wall.png")
+                    feedback_wall.image= pygame.image.load("Software_Game_Assets\wall.png")
                     wall.rect= wall.image.get_rect()
+                    feedback_wall.rect= feedback_wall.image.get_rect()
                     wall.rect.center= position
+                    feedback_wall.rect.center= (position[0]+ WIDTH_ENV, position[1])
                     self.STATIC_SPRITES.add(wall)
+                    self.feedback_sprites.add(feedback_wall)
             self.prev_left_position= pos
         elif isLeft == False:
             if self.prev_right_position != None:
                 self.num_rwall += 1
                 for position in self.bresenham_algorithm(self.prev_right_position, pos):
                     wall= Sprite()
+                    feedback_wall= Sprite()
                     wall.image= pygame.image.load("Software_Game_Assets\wall.png")
+                    feedback_wall.image= pygame.image.load("Software_Game_Assets\wall.png")
                     wall.rect= wall.image.get_rect()
+                    feedback_wall.rect= feedback_wall.image.get_rect()
                     wall.rect.center= position
+                    feedback_wall.rect.center= (position[0]+ WIDTH_ENV, position[1])
                     self.STATIC_SPRITES.add(wall)
+                    self.feedback_sprites.add(feedback_wall)
             self.prev_right_position= pos
         self.STATIC_SPRITES.draw(WINDOW)
+        self.feedback_sprites.draw(WINDOW)
         self.menu.draw_menu()
         pygame.display.update()
         for event in pygame.event.get():
@@ -307,13 +319,22 @@ class Environnement:
         WINDOW.fill((255,255,255))
         group_agents.draw(WINDOW)
         self.STATIC_SPRITES.draw(WINDOW)
+        self.feedback_sprites.draw(WINDOW)
         pygame.draw.line(WINDOW, (0,0,0), (WIDTH_ENV, 0), (WIDTH_ENV, HEIGHT), 5)
         pygame.display.update()
 
         for event in pygame.event.get():
-            self.clock.tick(framerate)
             pass
-        pass
+            
+    def show_super_brain_updates(self, super_brain):
+        for state_loc in super_brain.keys():
+            WINDOW.blit(super_brain[state_loc]["hitbox"], (state_loc[0] + WIDTH_ENV, state_loc[1]))
+        pygame.display.update()
+        for event in pygame.event.get():
+            pass
+
+
+
 
 
 if __name__ == "__main__":
@@ -369,7 +390,8 @@ if __name__ == "__main__":
                 astar_algorithm= AStarPathFinding(environment= env, agent= main_agent)
                 best_strat= astar_algorithm.pathfinding(astar_algorithm.agent)"""
             if qlr_algorithm is None:
-                qlr_algorithm= QLearningAlgorithm(environment= env, nb_agents= 2)
+                env.feedback_sprites.draw(WINDOW)
+                qlr_algorithm= QLearningAlgorithm(environment= env, nb_agents= 10)
                 best_strategies= qlr_algorithm.reinforced_pathfinding()
                 env.isAlive= False
             #env.evaluate_agent(main_agent)
