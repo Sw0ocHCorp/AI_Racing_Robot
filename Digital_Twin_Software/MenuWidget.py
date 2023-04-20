@@ -2,8 +2,8 @@ import pygame
 from pygame.sprite import *
 from PIL import Image
 import numpy as np
-from Agent import Agent
-from MCTreeSearch import *
+from Digital_Twin_Software.Agent import Agent
+from Digital_Twin_Software.PathFinding_Algorithms.MCTreeSearch import *
 
 rob_pb= Image.open("Software_Game_Assets/sendRobot_pushButton.png")
 exp_pb= Image.open("Software_Game_Assets/sendRobot_pushButton.png")

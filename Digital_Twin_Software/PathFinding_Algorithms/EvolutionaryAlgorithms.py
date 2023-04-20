@@ -3,8 +3,8 @@ import random
 import numpy as np
 from PIL import Image
 from threading import Thread
-from MenuWidget import MenuWidget
-from Agent import Agent
+from Digital_Twin_Software.MenuWidget import MenuWidget
+from Digital_Twin_Software.Agent import Agent
 import pygame
 
 # --> Genetic Algorithm <-- #

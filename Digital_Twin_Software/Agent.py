@@ -2,10 +2,17 @@ import pygame
 from PIL import Image
 import numpy as np
 import math
+from pygame.sprite import Sprite
 
 DROITE= 0
 GAUCHE= 1
 AVANT= 2
+HEIGHT= 900
+WIDTH= 1500
+WIDTH_ENV= 800
+PLAYER_CAR= pygame.image.load("Software_Game_Assets\Player_car_final.png")
+player_img= Image.open("Software_Game_Assets\Player_car_final.png")
+PLAYER_WIDTH, PLAYER_HEIGHT= player_img.size
 
 class Agent(pygame.sprite.Sprite):
     def __init__(self, velocity, rotation_angle, skin= "Software_Game_Assets\Player_car_final.png", position= (0,0)):
@@ -135,3 +142,106 @@ class Agent(pygame.sprite.Sprite):
         self.hitbox_surface.set_alpha(50)
         self.surf = self.hitbox_surface.get_rect()
         self.surf.center= self.rect.center
+
+class ReinforcementAgent(pygame.sprite.Sprite):
+    def __init__(self, environment, velocity, rotation_angle, skin= "Software_Game_Assets\Player_car_final.png", position= (round((WIDTH_ENV/2) - (PLAYER_WIDTH / 2), 4), round(HEIGHT - (PLAYER_HEIGHT/1.7), 4))):
+        super().__init__()
+        self.SKIN= pygame.image.load(skin)
+        self.image= self.SKIN
+        self.velocity= velocity
+        self.rotation_angle= rotation_angle
+        self.angle= 0
+        self.INIT_POSITION= position
+        self.rect= self.image.get_rect()
+        self.rect.center= self.INIT_POSITION
+        self.strategy= np.array([])
+        self.simulation_angle= 0
+        self.simulation_position= self.INIT_POSITION
+        self.env= environment
+        self.brain= {}
+    
+    #Fonction de Mouvement de l'Agent
+    def set_state(self, position, angle):
+        self.position= position
+        self.rect.center= position
+        self.angle= angle
+        self.image= pygame.transform.rotate(self.SKIN, angle)
+        self.rect= self.image.get_rect(center= self.position)
+    
+    def rotate(self, isLeft):
+        if isLeft:
+            self.angle+= self.rotation_angle
+        else:
+            self.angle-= self.rotation_angle
+        if self.angle > 360:
+            self.angle-= 360
+        self.image= pygame.transform.rotate(self.SKIN, self.angle)
+        self.rect= self.image.get_rect(center= self.rect.center)
+    
+    def simulated_rotation(self, isLeft, angle= 0):
+        if isLeft:
+            angle+= self.rotation_angle
+        else:
+            angle-= self.rotation_angle
+        if angle> 360:
+            angle-= 360
+        return angle
+
+    def movement(self):
+        radian_angle= math.radians(self.angle)
+        self.rect.centerx -= self.velocity * math.sin(radian_angle)
+        self.rect.centery -= self.velocity * math.cos(radian_angle)
+    
+    def simulated_movement(self, position, angle):
+        radian_angle= math.radians(angle)
+        location= list(position)
+        location[0] -= round(self.velocity * math.sin(radian_angle), 4)
+        location[1] -= round(self.velocity * math.cos(radian_angle), 4)
+        location= tuple(location)
+        return location
+    
+    def select_action(self, action):
+        if action == DROITE:
+            self.rotate(False)
+            self.movement()
+        elif action == GAUCHE:
+            self.rotate(True)
+            self.movement()
+        elif action == AVANT:
+            self.movement()
+        np.append(self.strategy, action)
+    
+    def simulated_take_action(self, position, angle, action):
+        update_angle= 0
+        update_location= (0,0)
+        if action == DROITE:
+            update_angle= self.simulated_rotation(False, angle)
+            update_location= self.simulated_movement(position, update_angle)
+        elif action == GAUCHE:
+            update_angle= self.simulated_rotation(True, angle)
+            update_location= self.simulated_movement(position, update_angle)
+        elif action == AVANT:
+            update_location= self.simulated_movement(position, angle)
+        np.append(self.strategy, action)
+        return update_location , update_angle
+    
+    def get_environment_feedback(self, location, angle):
+        assert self.image != None
+        ghost_agent= Sprite()
+        ghost_agent.rect= self.image.get_rect(center= location)
+        ghost_agent.image= pygame.transform.rotate(self.SKIN, angle)
+        ghost_agent.rect= ghost_agent.image.get_rect(center= ghost_agent.rect.center)
+        collided_sprites= pygame.sprite.spritecollide(ghost_agent, self.env.STATIC_SPRITES, False)
+        if self.env.FINISH_LINE in collided_sprites:
+            return 1
+        elif self.env.FINISH_LINE not in collided_sprites and len(collided_sprites) > 0 or (ghost_agent.rect.top > 900 or ghost_agent.rect.bottom > 900):
+            return -1
+        else:
+            return 0
+
+    def reset_state(self):
+        self.rect.center= self.INIT_POSITION
+        self.strategy= np.array([])
+        self.angle= 0
+        self.image= self.SKIN
+        self.rect= self.image.get_rect(center= self.INIT_POSITION)

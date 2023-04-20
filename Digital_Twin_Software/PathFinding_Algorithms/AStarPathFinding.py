@@ -4,7 +4,7 @@ import numpy as np
 from pygame.sprite import *
 import math
 from pygame.math import *
-from Agent import *
+from Digital_Twin_Software.Agent import *
 
 pygame.font.init()
 PLAYER_CAR= pygame.image.load("Software_Game_Assets\Player_car_final.png")

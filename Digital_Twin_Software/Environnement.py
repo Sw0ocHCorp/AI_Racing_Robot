@@ -5,13 +5,13 @@ from PIL import Image
 import time
 import math
 from pygame.sprite import *
-from Agent import Agent
-from EvolutionaryAlgorithms import *
-from MenuWidget import MenuWidget
-from MCTreeSearch import *
+from Digital_Twin_Software.Agent import Agent
+from Digital_Twin_Software.PathFinding_Algorithms.EvolutionaryAlgorithms import *
+from Digital_Twin_Software.MenuWidget import MenuWidget
+from Digital_Twin_Software.PathFinding_Algorithms.MCTreeSearch import *
 import paho.mqtt.client as mqtt
-from AStarPathFinding import *
-from ReinForcementLearning import *
+from Digital_Twin_Software.PathFinding_Algorithms.AStarPathFinding import *
+from Digital_Twin_Software.PathFinding_Algorithms.ReinForcementLearning import *
 
 PURPLE= (137, 0, 255)
 PLAYER_CAR= pygame.image.load("Software_Game_Assets\Player_car_final.png")
