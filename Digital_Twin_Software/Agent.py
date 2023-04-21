@@ -2,7 +2,7 @@ import pygame
 from PIL import Image
 import numpy as np
 import math
-from pygame.sprite import Sprite
+from pygame.sprite import Sprite, Group
 
 DROITE= 0
 GAUCHE= 1
@@ -10,12 +10,13 @@ AVANT= 2
 HEIGHT= 900
 WIDTH= 1500
 WIDTH_ENV= 800
-PLAYER_CAR= pygame.image.load("Software_Game_Assets\Player_car_final.png")
-player_img= Image.open("Software_Game_Assets\Player_car_final.png")
+PLAYER_CAR= pygame.image.load("Digital_Twin_Software\Software_Game_Assets\Player_car_final.png")
+player_img= Image.open("Digital_Twin_Software\Software_Game_Assets\Player_car_final.png")
+ghost_img= Image.open("Digital_Twin_Software\Software_Game_Assets\car1.png")
 PLAYER_WIDTH, PLAYER_HEIGHT= player_img.size
 
 class Agent(pygame.sprite.Sprite):
-    def __init__(self, velocity, rotation_angle, skin= "Software_Game_Assets\Player_car_final.png", position= (0,0)):
+    def __init__(self, velocity, rotation_angle, skin= "Digital_Twin_Software\Software_Game_Assets\Player_car_final.png", position= (0,0)):
         super().__init__()
         #-> Stratégie de l'Agent | Version GA
         self.strategy= np.random.randint(3, size= 100)
@@ -144,9 +145,11 @@ class Agent(pygame.sprite.Sprite):
         self.surf.center= self.rect.center
 
 class ReinforcementAgent(pygame.sprite.Sprite):
-    def __init__(self, environment, velocity, rotation_angle, skin= "Software_Game_Assets\Player_car_final.png", position= (round((WIDTH_ENV/2) - (PLAYER_WIDTH / 2), 4), round(HEIGHT - (PLAYER_HEIGHT/1.7), 4))):
+    def __init__(self, environment, velocity, rotation_angle, skin= "Digital_Twin_Software\Software_Game_Assets\Player_car_final.png", position= (round((WIDTH_ENV/2) - (PLAYER_WIDTH / 2), 4), round(HEIGHT - (PLAYER_HEIGHT/1.7), 4))):
         super().__init__()
         self.SKIN= pygame.image.load(skin)
+        self.GHOST_SKIN= pygame.image.load("Digital_Twin_Software\Software_Game_Assets\car1.png")
+        self.ghost_image= self.GHOST_SKIN
         self.image= self.SKIN
         self.velocity= velocity
         self.rotation_angle= rotation_angle
@@ -222,9 +225,17 @@ class ReinforcementAgent(pygame.sprite.Sprite):
             update_location= self.simulated_movement(position, update_angle)
         elif action == AVANT:
             update_location= self.simulated_movement(position, angle)
+            update_angle= angle
         np.append(self.strategy, action)
         return update_location , update_angle
     
+    def get_state_reward(self, position, angle, life_penalty= 0):
+        left_location, left_angle= self.simulated_take_action(position, angle, GAUCHE)
+        right_location, right_angle= self.simulated_take_action(position, angle, DROITE)
+        forward_location, forward_angle= self.simulated_take_action(position, angle, AVANT)
+        rewards= [self.get_environment_feedback(left_location, left_angle)- life_penalty, self.get_environment_feedback(right_location, right_angle) - life_penalty, self.get_environment_feedback(forward_location, forward_angle)- life_penalty]
+        return rewards
+
     def get_environment_feedback(self, location, angle):
         assert self.image != None
         ghost_agent= Sprite()
@@ -232,9 +243,18 @@ class ReinforcementAgent(pygame.sprite.Sprite):
         ghost_agent.image= pygame.transform.rotate(self.SKIN, angle)
         ghost_agent.rect= ghost_agent.image.get_rect(center= ghost_agent.rect.center)
         collided_sprites= pygame.sprite.spritecollide(ghost_agent, self.env.STATIC_SPRITES, False)
+        
         if self.env.FINISH_LINE in collided_sprites:
             return 1
         elif self.env.FINISH_LINE not in collided_sprites and len(collided_sprites) > 0 or (ghost_agent.rect.top > 900 or ghost_agent.rect.bottom > 900):
+            """ghost_agent.rect= self.ghost_image.get_rect(center= location)
+            ghost_agent.image= pygame.transform.rotate(self.GHOST_SKIN, angle)
+            ghost_agent.rect= ghost_agent.image.get_rect(center= ghost_agent.rect.center)
+            ghost_group= Group([ghost_agent])
+            ghost_group.draw(self.env.w)
+            pygame.display.update()
+            for event in pygame.event.get():
+                pass"""
             return -1
         else:
             return 0

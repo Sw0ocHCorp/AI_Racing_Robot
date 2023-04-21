@@ -4,11 +4,11 @@ import numpy as np
 from pygame.sprite import *
 import math
 from pygame.math import *
-from Digital_Twin_Software.Agent import *
+from Agent import *
 
 pygame.font.init()
-PLAYER_CAR= pygame.image.load("Software_Game_Assets\Player_car_final.png")
-SCORE_FONT= pygame.font.Font("Software_Game_Assets/PressStart2P-vaV7.ttf", 10)
+PLAYER_CAR= pygame.image.load("Digital_Twin_Software\Software_Game_Assets\Player_car_final.png")
+SCORE_FONT= pygame.font.Font("Digital_Twin_Software/Software_Game_Assets/PressStart2P-vaV7.ttf", 10)
 #SURFACE= pygame.Surface(PLAYER_CAR.get_rect().size, pygame.SRCALPHA)
 BLUE = (0, 0, 255)
 GREEN = (0, 255, 0)

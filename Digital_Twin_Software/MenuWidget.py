@@ -2,29 +2,29 @@ import pygame
 from pygame.sprite import *
 from PIL import Image
 import numpy as np
-from Digital_Twin_Software.Agent import Agent
-from Digital_Twin_Software.PathFinding_Algorithms.MCTreeSearch import *
+from Agent import Agent
+from PathFinding_Algorithms.MCTreeSearch import *
 
-rob_pb= Image.open("Software_Game_Assets/sendRobot_pushButton.png")
-exp_pb= Image.open("Software_Game_Assets/sendRobot_pushButton.png")
-txt_entry= Image.open("Software_Game_Assets/text_entry.png")
-agents_img= pygame.image.load("Software_Game_Assets/car1.png")
+rob_pb= Image.open("Digital_Twin_Software\Software_Game_Assets\sendRobot_pushButton.png")
+exp_pb= Image.open("Digital_Twin_Software\Software_Game_Assets\sendRobot_pushButton.png")
+txt_entry= Image.open("Digital_Twin_Software/Software_Game_Assets/text_entry.png")
+agents_img= pygame.image.load("Digital_Twin_Software/Software_Game_Assets/car1.png")
 agents_width= agents_img.get_rect().width
 agents_height= agents_img.get_rect().height
 agents_img= pygame.transform.scale(agents_img, (int(agents_width/2), int(agents_height/2)))
 
-best_agents_img= pygame.image.load("Software_Game_Assets/Player_car_final.png")
+best_agents_img= pygame.image.load("Digital_Twin_Software/Software_Game_Assets/Player_car_final.png")
 best_agents_width= best_agents_img.get_rect().width
 best_agents_height= best_agents_img.get_rect().height
 best_agents_img= pygame.transform.scale(best_agents_img, (int(best_agents_width/2), int(best_agents_height/2)))
 
-opti_img= pygame.image.load("Software_Game_Assets/arrow_optimization.png")
+opti_img= pygame.image.load("Digital_Twin_Software/Software_Game_Assets/arrow_optimization.png")
 opti_width= opti_img.get_rect().width
 opti_height= opti_img.get_rect().height
 opti_img= pygame.transform.scale(opti_img, (int(opti_width/25), int(opti_height/25)))
 opti_img= pygame.transform.rotate(opti_img, 180)
 pygame.font.init()
-SCORE_FONT= pygame.font.Font("Software_Game_Assets/PressStart2P-vaV7.ttf", 7)
+SCORE_FONT= pygame.font.Font("Digital_Twin_Software/Software_Game_Assets/PressStart2P-vaV7.ttf", 7)
 TREE_WIDTH= 1480 - 820
 WIDTH_ENV= 820
 
@@ -32,7 +32,7 @@ WIDTH_ENV= 820
 class MenuWidget:
     def __init__(self, window):
         pygame.font.init()
-        self.font= pygame.font.Font("Software_Game_Assets/PressStart2P-vaV7.ttf", 10)
+        self.font= pygame.font.Font("Digital_Twin_Software/Software_Game_Assets/PressStart2P-vaV7.ttf", 10)
         self.width_opti_img= np.zeros(10)
         self.init_fit_dict= dict()
         self.new_fit_dict= []
@@ -42,13 +42,13 @@ class MenuWidget:
         self.new_agents= Group()
         self.opti_sprites= Group()
         self.experiment_pb= Sprite()
-        self.experiment_pb.image= pygame.image.load("Software_Game_Assets/runExp_pushButton.png")
+        self.experiment_pb.image= pygame.image.load("Digital_Twin_Software/Software_Game_Assets/runExp_pushButton.png")
         self.robot_pb= Sprite()
-        self.robot_pb.image= pygame.image.load("Software_Game_Assets/sendRobot_pushButton.png")
+        self.robot_pb.image= pygame.image.load("Digital_Twin_Software/Software_Game_Assets/sendRobot_pushButton.png")
         self.pop_entry= Sprite()
-        self.pop_entry.image= pygame.image.load("Software_Game_Assets/text_entry.png")
+        self.pop_entry.image= pygame.image.load("Digital_Twin_Software/Software_Game_Assets/text_entry.png")
         self.nfe_entry= Sprite()
-        self.nfe_entry.image= pygame.image.load("Software_Game_Assets/text_entry.png")
+        self.nfe_entry.image= pygame.image.load("Digital_Twin_Software/Software_Game_Assets/text_entry.png")
         self.window= window
         self.menu_sprites.add(self.experiment_pb, self.robot_pb, self.pop_entry, self.nfe_entry)
         self.mcts_menu_sprites.add(self.experiment_pb, self.robot_pb)

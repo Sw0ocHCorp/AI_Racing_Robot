@@ -1,5 +1,5 @@
 import pygame
-from Digital_Twin_Software.Agent import ReinforcementAgent
+from Agent import ReinforcementAgent
 from PIL import Image
 import numpy as np
 import math
@@ -11,8 +11,8 @@ DROITE= 0
 GAUCHE= 1
 AVANT= 2
 
-PLAYER_CAR= pygame.image.load("Software_Game_Assets\Player_car_final.png")
-player_img= Image.open("Software_Game_Assets\Player_car_final.png")
+PLAYER_CAR= pygame.image.load("Digital_Twin_Software\Software_Game_Assets\Player_car_final.png")
+player_img= Image.open("Digital_Twin_Software\Software_Game_Assets\Player_car_final.png")
 PLAYER_WIDTH, PLAYER_HEIGHT= player_img.size
 HEIGHT= 900
 WIDTH= 1500
@@ -31,14 +31,15 @@ class QLearningAlgorithm():
     def select_opti_action(self, position, exploration_rate= 0.25):
         rewards= self.super_brain[position]["rewards"]
         actions_possible= []
-        if np.random.rand() < exploration_rate or np.max(rewards) <= 0:
+        rand_value= np.random.rand()
+        if rand_value < exploration_rate or np.min(rewards) == 0:
             for i, r in enumerate(rewards):
                 if r >= 0:
                     actions_possible.append(i)
             if len(actions_possible) == 0:
                 return np.random.randint(0, len(rewards))
-            else:
-                return np.random.choice(actions_possible)
+            else :
+                return np.argmax(actions_possible)
         else:
             return np.argmax(rewards)
     
@@ -97,18 +98,20 @@ class QLearningAlgorithm():
                 
 
     def reinforced_pathfinding(self):
+        executions= 50
+        life_penalty= 0
+        #life_penalty= 1/executions
         locations= [agent.INIT_POSITION for agent in self.agents]
         angles= [0 for agent in self.agents]
         self.env.show_agents_updates(self.agents, locations, angles)
         for i, agent in enumerate(self.agents):
             if locations[i] not in agent.brain.keys():
-                agent.brain[locations[i]]= {"rewards": [0, 0, 0], "previous_state": None, "action": -1, "angle":0}
+                agent.brain[locations[i]]= {"rewards": [-life_penalty, -life_penalty, -life_penalty], "angle":0, "previous_state": None, "action": -1}
             if locations[i] not in self.super_brain.keys():
                 hitbox= pygame.Surface((PLAYER_HEIGHT, PLAYER_HEIGHT), pygame.SRCALPHA)
                 hitbox.fill((255, 255, 255))
-                self.super_brain[locations[i]]= {"rewards": [0, 0, 0], "hitbox": hitbox}
+                self.super_brain[locations[i]]= {"rewards": [-life_penalty, -life_penalty, -life_penalty], "hitbox": hitbox}
         isStarted= False
-        executions= 500
         visited_states= [[loc] for loc in locations]
         previous_states= [loc for loc in locations]
         rewards= [0 for agent in self.agents]
@@ -124,17 +127,27 @@ class QLearningAlgorithm():
                 if game_over[i] == False:
                     agent.brain[locations[i]]["action"]= actions[i]
                     previous_states[i]= locations[i]
-                    locations[i], angles[i]= agent.simulated_take_action(locations[i], angles[i], actions[i])
-                    while locations[i] in visited_states[i]:
-                        actions[i]= self.select_opti_action(locations[i])
-                        locations[i], angles[i]= agent.simulated_take_action(locations[i], angles[i], actions[i])
+                    #locations[i], angles[i]= agent.simulated_take_action(locations[i], angles[i], actions[i])
+                    l, an= agent.simulated_take_action(locations[i], angles[i], actions[i])
+                    tries= 3
+                    a=0
+                    while l in visited_states[i]:
+                        a= self.select_opti_action(locations[i])
+                        l, an= agent.simulated_take_action(locations[i], angles[i], a)
+                        tries-= 1
+                        if tries == 0:
+                            break
+                    locations[i]= l
+                    angles[i]= an
+                    if tries < 3:
+                        actions[i]= a
                     visited_states[i].append(locations[i])
                     if locations[i] not in self.super_brain.keys():
                         hitbox= pygame.Surface((PLAYER_HEIGHT, PLAYER_HEIGHT), pygame.SRCALPHA)
                         hitbox.fill((255, 255, 255))
-                        self.super_brain[locations[i]]= {"rewards": [0, 0, 0], "hitbox": hitbox}
+                        self.super_brain[locations[i]]= {"rewards": agent.get_state_reward(locations[i], angles[i], life_penalty), "hitbox": hitbox}
                     if locations[i] not in agent.brain.keys():
-                        agent.brain[locations[i]]= {"rewards": [0, 0, 0], "previous_state": previous_states[i], "action": actions[i], "angle": angles[i]}
+                        agent.brain[locations[i]]= {"rewards": agent.get_state_reward(locations[i], angles[i], life_penalty), "angle": angles[i], "previous_state": previous_states[i], "action": actions[i]}
                     else:
                         agent.brain[locations[i]]["action"]= actions[i]
                         agent.brain[locations[i]]["previous_state"]= previous_states[i]   
@@ -201,10 +214,15 @@ class QLearningAlgorithm():
                             print("Scores= ", scores)
                             needReset= [False for agent in self.agents]
                             break
-                
-        strategies= []
-        for agent in self.agents:
-            strategies.append(agent.strategy)
-        return strategies
+        final_position= self.agents[0].INIT_POSITION
+        final_angle= 0
+        optimal_strategy= []
+        while self.agents[0].get_environment_feedback(final_position, final_angle) == 0:
+            action= self.select_opti_action(final_position)
+            optimal_strategy.append(action)
+            final_position, final_angle= self.agents[0].simulated_take_action(final_position, final_angle, action)
+            self.env.show_update(final_position, final_angle)
+        print("Optimal strategy= ", optimal_strategy)
+        return optimal_strategy
         
                 

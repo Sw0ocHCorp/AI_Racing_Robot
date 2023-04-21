@@ -5,17 +5,17 @@ from PIL import Image
 import time
 import math
 from pygame.sprite import *
-from Digital_Twin_Software.Agent import Agent
-from Digital_Twin_Software.PathFinding_Algorithms.EvolutionaryAlgorithms import *
-from Digital_Twin_Software.MenuWidget import MenuWidget
-from Digital_Twin_Software.PathFinding_Algorithms.MCTreeSearch import *
+from Agent import Agent
+from PathFinding_Algorithms.EvolutionaryAlgorithms import *
+from MenuWidget import MenuWidget
+from PathFinding_Algorithms.MCTreeSearch import *
 import paho.mqtt.client as mqtt
-from Digital_Twin_Software.PathFinding_Algorithms.AStarPathFinding import *
-from Digital_Twin_Software.PathFinding_Algorithms.ReinForcementLearning import *
+from PathFinding_Algorithms.AStarPathFinding import *
+from PathFinding_Algorithms.ReinForcementLearning import *
 
 PURPLE= (137, 0, 255)
-PLAYER_CAR= pygame.image.load("Software_Game_Assets\Player_car_final.png")
-player_img= Image.open("Software_Game_Assets\Player_car_final.png")
+PLAYER_CAR= pygame.image.load("Digital_Twin_Software\Software_Game_Assets\Player_car_final.png")
+player_img= Image.open("Digital_Twin_Software\Software_Game_Assets\Player_car_final.png")
 PLAYER_WIDTH, PLAYER_HEIGHT= player_img.size
 HEIGHT= 900
 WIDTH= 1600
@@ -42,12 +42,13 @@ class Environnement:
         self.isAlive= False
         self.STATIC_SPRITES= Group()
         self.FINISH_LINE= Sprite(self.STATIC_SPRITES)
-        self.FINISH_LINE.image= pygame.image.load("Software_Game_Assets\Finish_line.png")
+        self.FINISH_LINE.image= pygame.image.load("Digital_Twin_Software\Software_Game_Assets/finish_line.png")
         self.FINISH_LINE.rect= self.FINISH_LINE.image.get_rect()
         self.FINISH_LINE.rect.topleft= (400, 0)
         self.key_policy= ""
         self.clock.tick(10)
         self.feedback_sprites= Group()
+        self.w= WINDOW
 
     def euclidian_distance(self, coord_o, coord_f):
         return math.sqrt(abs(coord_o[0]-coord_f[0]) + abs(coord_o[1]-coord_f[1]))
@@ -108,8 +109,8 @@ class Environnement:
                 for position in self.bresenham_algorithm(self.prev_left_position, pos):
                     wall= Sprite()
                     feedback_wall= Sprite()
-                    wall.image= pygame.image.load("Software_Game_Assets\wall.png")
-                    feedback_wall.image= pygame.image.load("Software_Game_Assets\wall.png")
+                    wall.image= pygame.image.load("Digital_Twin_Software\Software_Game_Assets\wall.png")
+                    feedback_wall.image= pygame.image.load("Digital_Twin_Software\Software_Game_Assets\wall.png")
                     wall.rect= wall.image.get_rect()
                     feedback_wall.rect= feedback_wall.image.get_rect()
                     wall.rect.center= position
@@ -123,8 +124,8 @@ class Environnement:
                 for position in self.bresenham_algorithm(self.prev_right_position, pos):
                     wall= Sprite()
                     feedback_wall= Sprite()
-                    wall.image= pygame.image.load("Software_Game_Assets\wall.png")
-                    feedback_wall.image= pygame.image.load("Software_Game_Assets\wall.png")
+                    wall.image= pygame.image.load("Digital_Twin_Software\Software_Game_Assets\wall.png")
+                    feedback_wall.image= pygame.image.load("Digital_Twin_Software\Software_Game_Assets\wall.png")
                     wall.rect= wall.image.get_rect()
                     feedback_wall.rect= feedback_wall.image.get_rect()
                     wall.rect.center= position
@@ -328,10 +329,10 @@ class Environnement:
             
     def show_super_brain_updates(self, super_brain):
         for state_loc in super_brain.keys():
-            WINDOW.blit(super_brain[state_loc]["hitbox"], (state_loc[0] + WIDTH_ENV, state_loc[1]))
-        pygame.display.update()
-        for event in pygame.event.get():
-            pass
+            WINDOW.blit(super_brain[state_loc]["hitbox"], ((state_loc[0]- (PLAYER_HEIGHT / 2)) + WIDTH_ENV, state_loc[1] - (PLAYER_HEIGHT / 2)))
+            pygame.display.update()
+            for event in pygame.event.get():
+                pass
 
 
 
@@ -439,7 +440,7 @@ if __name__ == "__main__":
                             if ga is not None and ga.isFinished == True:
                                 ae_agents= [Agent(velocity= 10, rotation_angle= 45, 
                                                 position= ((WIDTH_ENV/2) - (PLAYER_WIDTH / 2), HEIGHT - (PLAYER_HEIGHT/1.7)),
-                                                skin= "Software_Game_Assets/car1.png") for i in range(int(env.menu.pop_buffer))]
+                                                skin= "Digital_Twin_Software\Software_Game_Assets\car1.png") for i in range(int(env.menu.pop_buffer))]
                                 ga= GeneticAlgorithm(agents= ae_agents, environment= env, evaluate= env.multi_eval_agents, isThreadEvaluation= True)
                                 ga.set_max_nfe(env.menu.nfe_buffer)
                             env.isAlive= True

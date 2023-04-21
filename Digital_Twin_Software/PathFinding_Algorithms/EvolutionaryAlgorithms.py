@@ -3,14 +3,14 @@ import random
 import numpy as np
 from PIL import Image
 from threading import Thread
-from Digital_Twin_Software.MenuWidget import MenuWidget
-from Digital_Twin_Software.Agent import Agent
+from MenuWidget import MenuWidget
+from Agent import Agent
 import pygame
 
 # --> Genetic Algorithm <-- #
 HEIGHT= 900
 WIDTH= 800
-player_img= Image.open("Software_Game_Assets\Player_car_final.png")
+player_img= Image.open("Digital_Twin_Software\Software_Game_Assets\Player_car_final.png")
 PLAYER_WIDTH, PLAYER_HEIGHT= player_img.size
 class GeneticAlgorithm():
     def __init__(self, agents, evaluate, environment, isThreadEvaluation= False):
