@@ -7,7 +7,7 @@ from pygame.sprite import Sprite, Group
 DROITE= 0
 GAUCHE= 1
 AVANT= 2
-HEIGHT= 900
+HEIGHT= 940
 WIDTH= 1500
 WIDTH_ENV= 800
 PLAYER_CAR= pygame.image.load("Digital_Twin_Software\Software_Game_Assets\Player_car_final.png")
@@ -145,7 +145,7 @@ class Agent(pygame.sprite.Sprite):
         self.surf.center= self.rect.center
 
 class ReinforcementAgent(pygame.sprite.Sprite):
-    def __init__(self, environment, velocity, rotation_angle, skin= "Digital_Twin_Software\Software_Game_Assets\Player_car_final.png", position= (round((WIDTH_ENV/2) - (PLAYER_WIDTH / 2), 4), round(HEIGHT - (PLAYER_HEIGHT/1.7), 4))):
+    def __init__(self, environment, velocity, rotation_angle, skin= "Digital_Twin_Software\Software_Game_Assets\Player_car_final.png", position= (round((WIDTH_ENV/2) - (PLAYER_WIDTH / 2), 4), round(HEIGHT - (PLAYER_HEIGHT*1.2), 4))):
         super().__init__()
         self.SKIN= pygame.image.load(skin)
         self.GHOST_SKIN= pygame.image.load("Digital_Twin_Software\Software_Game_Assets\car1.png")
@@ -230,10 +230,10 @@ class ReinforcementAgent(pygame.sprite.Sprite):
         return update_location , update_angle
     
     def get_state_reward(self, position, angle, life_penalty= 0):
-        left_location, left_angle= self.simulated_take_action(position, angle, GAUCHE)
         right_location, right_angle= self.simulated_take_action(position, angle, DROITE)
+        left_location, left_angle= self.simulated_take_action(position, angle, GAUCHE)
         forward_location, forward_angle= self.simulated_take_action(position, angle, AVANT)
-        rewards= [self.get_environment_feedback(left_location, left_angle)- life_penalty, self.get_environment_feedback(right_location, right_angle) - life_penalty, self.get_environment_feedback(forward_location, forward_angle)- life_penalty]
+        rewards= [self.get_environment_feedback(right_location, right_angle) - life_penalty, self.get_environment_feedback(left_location, left_angle)- life_penalty, self.get_environment_feedback(forward_location, forward_angle)- life_penalty]
         return rewards
 
     def get_environment_feedback(self, location, angle):

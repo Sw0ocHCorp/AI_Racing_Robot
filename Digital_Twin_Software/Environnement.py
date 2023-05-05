@@ -17,7 +17,7 @@ PURPLE= (137, 0, 255)
 PLAYER_CAR= pygame.image.load("Digital_Twin_Software\Software_Game_Assets\Player_car_final.png")
 player_img= Image.open("Digital_Twin_Software\Software_Game_Assets\Player_car_final.png")
 PLAYER_WIDTH, PLAYER_HEIGHT= player_img.size
-HEIGHT= 900
+HEIGHT= 940
 WIDTH= 1600
 WIDTH_ENV= 800
 WINDOW= pygame.display.set_mode((WIDTH, HEIGHT))
@@ -329,10 +329,11 @@ class Environnement:
             
     def show_super_brain_updates(self, super_brain):
         for state_loc in super_brain.keys():
-            WINDOW.blit(super_brain[state_loc]["hitbox"], ((state_loc[0]- (PLAYER_HEIGHT / 2)) + WIDTH_ENV, state_loc[1] - (PLAYER_HEIGHT / 2)))
-            pygame.display.update()
-            for event in pygame.event.get():
-                pass
+            if "hitbox" in super_brain[state_loc]:
+                WINDOW.blit(super_brain[state_loc]["hitbox"], ((state_loc[0]- (PLAYER_HEIGHT / 2)) + WIDTH_ENV, state_loc[1] - (PLAYER_HEIGHT / 2)))
+                pygame.display.update()
+                for event in pygame.event.get():
+                    pass
 
 
 
@@ -345,7 +346,7 @@ if __name__ == "__main__":
     env= Environnement()
     ga= None
     run= True
-    main_agent= Agent(velocity= 20, rotation_angle= 45, position= ((WIDTH_ENV/2) - (PLAYER_WIDTH / 2), HEIGHT - (PLAYER_HEIGHT/1.7)))
+    main_agent= Agent(velocity= 20, rotation_angle= 45, position= ((WIDTH_ENV/2) - (PLAYER_WIDTH / 2), HEIGHT - (PLAYER_HEIGHT*1.2)))
     #WINDOW.fill((51,51,51))
     WINDOW.fill((255,255,255))
     pygame.draw.line(WINDOW, (0,0,0), (WIDTH_ENV, 0), (WIDTH_ENV, HEIGHT), 5)
@@ -392,8 +393,8 @@ if __name__ == "__main__":
                 best_strat= astar_algorithm.pathfinding(astar_algorithm.agent)"""
             if qlr_algorithm is None:
                 env.feedback_sprites.draw(WINDOW)
-                qlr_algorithm= QLearningAlgorithm(environment= env, nb_agents= 10)
-                best_strategies= qlr_algorithm.reinforced_pathfinding()
+                qlr_algorithm= QLearningAlgorithm(environment= env, nb_agents= 1)
+                best_strategies= qlr_algorithm.reinforced_pathfinding(initial_explo_rate=0.25)
                 env.isAlive= False
             #env.evaluate_agent(main_agent)
             isPrinted= False
