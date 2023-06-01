@@ -244,17 +244,9 @@ class ReinforcementAgent(pygame.sprite.Sprite):
         ghost_agent.rect= ghost_agent.image.get_rect(center= ghost_agent.rect.center)
         collided_sprites= pygame.sprite.spritecollide(ghost_agent, self.env.STATIC_SPRITES, False)
         
-        if self.env.FINISH_LINE in collided_sprites:
+        if self.env.FINISH_LINE in collided_sprites and len(collided_sprites) >= 1:
             return 1
-        elif self.env.FINISH_LINE not in collided_sprites and len(collided_sprites) > 0 or (ghost_agent.rect.top > 900 or ghost_agent.rect.bottom > 900):
-            """ghost_agent.rect= self.ghost_image.get_rect(center= location)
-            ghost_agent.image= pygame.transform.rotate(self.GHOST_SKIN, angle)
-            ghost_agent.rect= ghost_agent.image.get_rect(center= ghost_agent.rect.center)
-            ghost_group= Group([ghost_agent])
-            ghost_group.draw(self.env.w)
-            pygame.display.update()
-            for event in pygame.event.get():
-                pass"""
+        elif len(collided_sprites) > 0 or (ghost_agent.rect.top > 900 or ghost_agent.rect.bottom > 900):
             return -1
         else:
             return 0

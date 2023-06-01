@@ -28,7 +28,6 @@ WINDOW= pygame.display.set_mode((WIDTH, HEIGHT))
 class Environnement:
     def __init__(self):
         self.mqtt_client= mqtt.Client(client_id= "AI_Racing_Robot")
-        #self.mqtt_client.connect("test.mosquitto.org")
         self.right_bound= np.empty((0,2))
         self.left_bound= np.empty((0,2))
         self.clock= pygame.time.Clock()
@@ -135,7 +134,7 @@ class Environnement:
             self.prev_right_position= pos
         self.STATIC_SPRITES.draw(WINDOW)
         self.feedback_sprites.draw(WINDOW)
-        self.menu.draw_menu()
+        self.menu.draw_mcts_menu()
         pygame.display.update()
         for event in pygame.event.get():
             pass
@@ -284,13 +283,16 @@ class Environnement:
         return fitness
 
     def send_optimum_strategy(self, best_strat):
+        self.mqtt_client.connect("test.mosquitto.org")
         mqtt_message=""
         for action in best_strat:
             mqtt_message+= str(int(action))
         self.mqtt_client.publish("AI_RACING_Robot/Best_Strategy", mqtt_message)
+        print("Message_Strategy= ", mqtt_message)
         time.sleep(1)
     
     def send_key_policy(self, key_policy):
+        self.mqtt_client.connect("test.mosquitto.org")
         mqtt_message=""
         for action in best_strat:
             mqtt_message= key_policy
@@ -340,6 +342,8 @@ class Environnement:
 
 
 if __name__ == "__main__":
+    np.random.seed(0)
+    random.seed(0)
     canWritePop= False
     canWriteNfe= False
     ae_agents= []
@@ -352,7 +356,7 @@ if __name__ == "__main__":
     pygame.draw.line(WINDOW, (0,0,0), (WIDTH_ENV, 0), (WIDTH_ENV, HEIGHT), 5)
     main_agent.draw(WINDOW)
     env.STATIC_SPRITES.draw(WINDOW)
-    env.menu.draw_menu()
+    env.menu.draw_mcts_menu()
     best_strat= []
     fitness_score= 0
     isPrinted= False
@@ -366,57 +370,15 @@ if __name__ == "__main__":
     while run:
         env.clock.tick(10)
         env.STATIC_SPRITES.draw(WINDOW)
-        env.menu.draw_menu()
+        env.menu.draw_mcts_menu()
         if env.isAlive:
-            """if mcts_algorithm is None:
-                mcts_algorithm= ClassicMCTreeSearch(env= env, agent= main_agent)
-                env.menu.attach_mcts_algo(mcts_algorithm)
-                env.key_policy= mcts_algorithm.start_optimization(coeff_explo= 5, coeff_exploit= 50)
-                env.isAlive= False"""
-            """if ga is None:
-                #ga= GeneticAlgorithm(agents= main_agent, evaluate= env.evaluate_agent)
-                ae_agents= [Agent(velocity= 20, rotation_angle= 45, 
-                                position= ((WIDTH_ENV/2) - (PLAYER_WIDTH / 2), HEIGHT - (PLAYER_HEIGHT/1.7)),
-                                skin= "Software_Game_Assets/car1.png") for i in range(int(env.menu.pop_buffer))]
-                ga= GeneticAlgorithm(agents= ae_agents, environment= env, evaluate= env.multi_eval_agents, isThreadEvaluation= True)
-                ga.set_max_nfe(int(env.menu.nfe_buffer))
-                ga.attach_menu(env.menu)
-                env.menu.attach_ga(ga)"""
-            """if nsga2 is None:
-                ae_agents= [Agent(velocity= 20, rotation_angle= 45, 
-                                position= ((WIDTH_ENV/2) - (PLAYER_WIDTH / 2), HEIGHT - (PLAYER_HEIGHT/1.7)),
-                                skin= "Software_Game_Assets/car1.png") for i in range(int(env.menu.pop_buffer))]
-                nsga2= NSGAII(agents= ae_agents, n_obj_evaluate= env.bi_objective_eval_agents, environment= env, menu= env.menu, max_nfe= int(env.menu.nfe_buffer))
-            best_indiv= nsga2.start_optimization()"""
-            """if astar_algorithm is None:
-                astar_algorithm= AStarPathFinding(environment= env, agent= main_agent)
-                best_strat= astar_algorithm.pathfinding(astar_algorithm.agent)"""
             if qlr_algorithm is None:
                 env.feedback_sprites.draw(WINDOW)
                 qlr_algorithm= QLearningAlgorithm(environment= env, nb_agents= 1)
-                best_strategies= qlr_algorithm.reinforced_pathfinding(initial_explo_rate=0.25)
+                best_strategie= qlr_algorithm.reinforced_pathfinding(executions= 50, initial_explo_rate=0.3, exploration_reduction= True)
                 env.isAlive= False
-            #env.evaluate_agent(main_agent)
             isPrinted= False
-            #best_strat, fitness_score= ga.start_optimization()
-        """if ga is not None:
-            if ga.isFinished and isPrinted == False:
-                isPrinted= True
-                env.isAlive= False
-                for action in best_strat:
-                    _= main_agent.select_action(best_strat)
-                print("Best_Strat=", best_strat)
-                print("Fitness_Score=", fitness_score)"""
-        """if nsga2 is not None:
-            if nsga2.isFinished and isPrinted == False:
-                isPrinted= True
-                env.isAlive= False
-                assert best_indiv is not None
-                best_strat= best_indiv["strategy"]
-                for action in best_strat:
-                    _= main_agent.select_action(best_strat)
-                print("Best_Strat=", best_strat)
-                print("Steps_Score=", best_indiv["steps_score"], "Global_Score=", best_indiv["global_score"])"""
+            
         pygame.display.update()
 
         for event in pygame.event.get():
@@ -436,7 +398,10 @@ if __name__ == "__main__":
                         elif env.menu.robot_pb_interaction(pygame.mouse.get_pos()) == True:
                                 if ga is not None and ga.isFinished == True:
                                     env.send_optimum_strategy(best_strat)
-                                env.send_key_policy(key_policy= env.key_policy)
+                                if qlr_algorithm is not None:
+                                    env.send_optimum_strategy(best_strategie)
+                                else:
+                                    env.send_key_policy(key_policy= env.key_policy)
                         elif env.menu.experiment_pb_interaction(pygame.mouse.get_pos()) == True:
                             if ga is not None and ga.isFinished == True:
                                 ae_agents= [Agent(velocity= 10, rotation_angle= 45, 
